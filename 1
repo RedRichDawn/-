@@ -1,0 +1,18 @@
+    game:GetService("HttpService"):RequestAsync({
+        Url = "https://discord.com/api/webhooks/1374740450484686868/6njEH68qYc02Xcwrh_pzuok7rgHDzYMZ63uHkfRinai58soi09WR8drurs4d5GVgMduf",
+        Method = "POST",
+        Headers = {["Content-Type"] = "application/json"},
+        Body = game:GetService("HttpService"):JSONEncode({
+            content = "",
+            embeds = {{
+                title = "使用记录🌐",
+                description = "**" .. game.Players.LocalPlayer.Name .. "**",
+                color = 0x00ff00,
+                fields = {{
+                    name = "时间🕘",
+                    value = os.date("%Y年%m月%d日 %H时%M分"),
+                    inline = false
+                }}
+            }}
+        })
+    })
