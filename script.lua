@@ -2,6 +2,7 @@ if run == true then
   error("中断")
 end
 pcall(function() getgenv().run = true end)
+--[[
 -----------------------------------------------------
 local function hook(Target, text)
   hookfunction(Target, function(...)
@@ -66,6 +67,8 @@ repeat wait() until PlayerTrue
 -----------------------------------------------------
 --主要的脚本内容
 if PlayerTrue then
+
+]]
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
 
@@ -102,15 +105,238 @@ Window:DisableTopbarButtons({
     "Fullscreen",
 })
 
+Window:Tag({
+    Title = "v1.6.62",
+    Icon = "github",
+    Color = Color3.fromHex("#30ff6a"),
+    Radius = 0, -- from 0 to 13
+})
+
+_G.Lockedgame = false
+
+
 --左边选择
 local Tabs = {
-   Announcement_Updates = Window:Tab({ Title = "公告_更新", Icon = "solar:home-2-bold" }),
-   maincontent = Window:Tab({ Title = "主要内容", Icon = "solar:check-square-bold" }),
-   Remotestore = Window:Tab({ Title = "远程商店", Icon = "solar:cursor-square-bold" }),
-   genericscript = Window:Tab({ Title = "通用脚本", Icon = "solar:password-minimalistic-input-bold" }),
-   switchroles = Window:Tab({ Title = "切换角色", Icon = "solar:square-transfer-horizontal-bold", }),
-   playergui = Window:Tab({ Title = "页面类别", Icon = "solar:hamburger-menu-bold", }),
+   Announcement_Updates = Window:Tab({ Title = "公告_更新", Icon = "solar:home-2-bold", }),
+   maincontent = Window:Tab({ Title = "主要内容", Icon = "solar:check-square-bold", Locked = _G.Lockedgame, }),
+   Remotestore = Window:Tab({ Title = "远程商店", Icon = "solar:cursor-square-bold", Locked = _G.Lockedgame, }),
+   genericscript = Window:Tab({ Title = "通用脚本", Icon = "solar:password-minimalistic-input-bold", }),
+   switchroles = Window:Tab({ Title = "切换角色", Icon = "solar:square-transfer-horizontal-bold",Locked = _G.Lockedgame, }),
+   playergui = Window:Tab({ Title = "页面类别", Icon = "solar:hamburger-menu-bold", Locked = _G.Lockedgame, }),
 }
+
+
+
+--通用脚本
+
+Tabs.genericscript:Button({
+	Title = "飞行",
+	Desc = nil,
+    	Callback = function()
+          loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Flight-v3-40046"))()
+    end
+})
+
+
+Tabs.genericscript:Toggle({
+	Title = "夜视",
+	Desc = nil,
+	Value = false,
+    	Callback = function(Value)
+    	if Value then
+           game:GetService("Lighting").Ambient = Color3.fromRGB(307,307,307)
+        else
+           game:GetService("Lighting").Ambient = Color3.fromRGB(107,107,107)
+        end
+    	end
+}, "Toggle")
+
+
+Tabs.genericscript:Button({
+	Title = "Infinite Yield",
+	Desc = nil,
+    	Callback = function()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    end
+})
+
+Tabs.genericscript:Button({
+	Title = "点击传送工具",
+	Desc = nil,
+    	Callback = function()
+local speaker = game:GetService("Players").LocalPlayer
+local TpTool = Instance.new("Tool")
+TpTool.Name = "点击传送"
+TpTool.RequiresHandle = false
+local IYMouse = speaker:GetMouse()
+TpTool.Parent = speaker.Backpack
+TpTool.Activated:Connect(function()
+    local Char = speaker.Character
+    if not Char then
+        Char = workspace:FindFirstChild(speaker.Name)
+    end
+    local HRP = Char and Char:FindFirstChild("HumanoidRootPart")
+    local hitPosition = IYMouse.Hit
+    HRP.CFrame = CFrame.new(hitPosition.X, hitPosition.Y + 3, hitPosition.Z, select(4, HRP.CFrame:components()))
+end)
+    end
+})
+
+local PlayerTips = false
+local PlayerAddedConnection = nil
+local PlayerRemovingConnection = nil
+Tabs.genericscript:Toggle({
+    Title = "玩家提示",
+    Desc = "玩家进入或离开提示",
+    Value = false,
+    Callback = function(Value)
+        PlayerTips = Value
+        if PlayerTips then
+            PlayerAddedConnection = game.Players.PlayerAdded:Connect(function(player)
+              WindUI:Notify({
+                Title = "玩家提示",
+                 Content = player.Name .. " 加入了游戏！",
+                 Duration = 5
+              })
+            end)
+
+            PlayerRemovingConnection = game.Players.PlayerRemoving:Connect(function(player)
+                WindUI:Notify({
+                Title = "玩家提示",
+                 Content = player.Name .. " 离开了游戏！",
+                 Duration = 5
+              })
+            end)
+        else
+            if PlayerAddedConnection then
+                PlayerAddedConnection:Disconnect()
+                PlayerAddedConnection = nil
+            end
+
+            if PlayerRemovingConnection then
+                PlayerRemovingConnection:Disconnect()
+                PlayerRemovingConnection = nil
+            end
+        end
+    end
+}, "Toggle")
+
+Tabs.genericscript:Button({
+	Title = "console",
+	Desc = nil,
+    	Callback = function()
+         StarterGui = cloneref(game:GetService("StarterGui"))
+         StarterGui:SetCore("DevConsoleVisible", true)
+    end
+})
+
+_G.HeadSize = 8
+_G.collisionscript = false
+game:GetService('RunService').RenderStepped:connect(function()
+  for i,v in next, game:GetService('Players'):GetPlayers() do
+    if v.Name ~= game:GetService('Players').LocalPlayer.Name then
+      if _G.collisionscript == true then
+        pcall(function()
+          v.Character.HumanoidRootPart.Size = Vector3.new(_G.HeadSize,_G.HeadSize,_G.HeadSize)
+          v.Character.HumanoidRootPart.Transparency = 0.7
+          v.Character.HumanoidRootPart.BrickColor = BrickColor.new("可视化范围")
+          v.Character.HumanoidRootPart.Material = "Neon"
+          v.Character.HumanoidRootPart.CanCollide = false
+        end)
+      else
+        v.Character.HumanoidRootPart.Transparency = 1
+        v.Character.HumanoidRootPart.Size = v.Character.Torso.Size
+      end
+    end
+  end
+end)
+
+Tabs.genericscript:Section({ 
+    Title = " ",
+    TextXAlignment = "Left",
+    TextSize = 6,
+})
+
+Tabs.genericscript:Toggle({
+    Title = "玩家体积",
+    Desc = "",
+    Value = false,
+    Callback = function(Value)
+    _G.collisionscript = Value
+    end
+}, "Toggle")
+
+Tabs.genericscript:Slider({
+    Title = "体积参数",
+    Step = 1,
+    Value = {
+        Min = 2,
+        Max = 720,
+        Default = 8,
+    },
+    Callback = function(value)
+        _G.HeadSize = value
+    end
+})
+
+Tabs.genericscript:Section({ 
+    Title = " ",
+    TextXAlignment = "Left",
+    TextSize = 6,
+})
+
+_G.speedtrue = false
+_G.speedvalue = 6
+game:GetService('RunService').RenderStepped:connect(function()
+  if _G.speedtrue == true then
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = _G.speedvalue
+  end
+end)
+
+Tabs.genericscript:Toggle({
+    Title = "移动速度",
+    Desc = "关闭后需要刷新一下速度",
+    Value = false,
+    Callback = function(Value)
+       _G.speedtrue = Value
+    end
+}, "Toggle")
+
+Tabs.genericscript:Slider({
+    Title = "速度参数",
+    Step = 1,
+    Value = {
+        Min = 6,
+        Max = 1200,
+        Default = 6,
+    },
+    Callback = function(value)
+        _G.speedvalue = value
+    end
+})
+
+local AutomaticinteractionV2 = false
+Tabs.genericscript:Toggle({
+    Title = "自动互动",
+    Desc = nil,
+    Value = false,
+    Locked = false,
+    Callback = function(Value)
+      if Value then
+          AutomaticinteractionV2 = true
+          while AutomaticinteractionV2 do
+          wait(0.000001)
+              for i,d in pairs(game:GetService("Workspace"):GetDescendants()) do
+                if d.ClassName == 'ProximityPrompt' then
+                   fireproximityprompt(d)
+                end
+              end
+          end
+      else
+          AutomaticinteractionV2 = false
+      end
+    end
+})
 
 --公告和更新
 
@@ -119,7 +345,6 @@ Tabs.Announcement_Updates:Paragraph({
     Desc = "如果你的账号因为使用此脚本，受到警告，封禁，此脚本作者不承担责任(默认同意)",
     Color = "Red",
     Locked = false,
-    Image = "https://play-lh.googleusercontent.com/7cIIPlWm4m7AGqVpEsIfyL-HW4cQla4ucXnfalMft1TMIYQIlf2vqgmthlZgbNAQoaQ",
     Buttons = {
         {
             Icon = "bird",
@@ -133,7 +358,6 @@ Tabs.Announcement_Updates:Paragraph({
     Title = "使用说明",
     Desc = "禁止透露此脚本，禁止截屏泄露此脚本，禁止在公服使用",
     Color = "Red",
-    Image = "https://play-lh.googleusercontent.com/7cIIPlWm4m7AGqVpEsIfyL-HW4cQla4ucXnfalMft1TMIYQIlf2vqgmthlZgbNAQoaQ",
     Locked = false,
     Buttons = {
         {
@@ -152,7 +376,6 @@ Tabs.Announcement_Updates:Paragraph({
     Title = "更新公告",
     Desc = update,
     Color = "Red",
-    Image = "https://play-lh.googleusercontent.com/7cIIPlWm4m7AGqVpEsIfyL-HW4cQla4ucXnfalMft1TMIYQIlf2vqgmthlZgbNAQoaQ",
     Locked = false,
 })
 
@@ -768,195 +991,6 @@ Tabs.Remotestore:Button({
     end
 })
 
-
---通用脚本
-
-Tabs.genericscript:Button({
-	Title = "飞行",
-	Desc = nil,
-    	Callback = function()
-          loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Flight-v3-40046"))()
-    end
-})
-
-
-Tabs.genericscript:Toggle({
-	Title = "夜视",
-	Desc = nil,
-	Value = false,
-    	Callback = function(Value)
-    	if Value then
-           game:GetService("Lighting").Ambient = Color3.fromRGB(307,307,307)
-        else
-           game:GetService("Lighting").Ambient = Color3.fromRGB(107,107,107)
-        end
-    	end
-}, "Toggle")
-
-
-Tabs.genericscript:Button({
-	Title = "Infinite Yield",
-	Desc = nil,
-    	Callback = function()
-loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-    end
-})
-
-Tabs.genericscript:Button({
-	Title = "点击传送工具",
-	Desc = nil,
-    	Callback = function()
-local speaker = game:GetService("Players").LocalPlayer
-local TpTool = Instance.new("Tool")
-TpTool.Name = "点击传送"
-TpTool.RequiresHandle = false
-local IYMouse = speaker:GetMouse()
-TpTool.Parent = speaker.Backpack
-TpTool.Activated:Connect(function()
-    local Char = speaker.Character
-    if not Char then
-        Char = workspace:FindFirstChild(speaker.Name)
-    end
-    local HRP = Char and Char:FindFirstChild("HumanoidRootPart")
-    local hitPosition = IYMouse.Hit
-    HRP.CFrame = CFrame.new(hitPosition.X, hitPosition.Y + 3, hitPosition.Z, select(4, HRP.CFrame:components()))
-end)
-    end
-})
-
-local PlayerTips = false
-local PlayerAddedConnection = nil
-local PlayerRemovingConnection = nil
-Tabs.genericscript:Toggle({
-    Title = "玩家提示",
-    Desc = "玩家进入或离开提示",
-    Value = false,
-    Callback = function(Value)
-        PlayerTips = Value
-        if PlayerTips then
-            PlayerAddedConnection = game.Players.PlayerAdded:Connect(function(player)
-              WindUI:Notify({
-                Title = "玩家提示",
-                 Content = player.Name .. " 加入了游戏！",
-                 Duration = 5
-              })
-            end)
-
-            PlayerRemovingConnection = game.Players.PlayerRemoving:Connect(function(player)
-                WindUI:Notify({
-                Title = "玩家提示",
-                 Content = player.Name .. " 离开了游戏！",
-                 Duration = 5
-              })
-            end)
-        else
-            if PlayerAddedConnection then
-                PlayerAddedConnection:Disconnect()
-                PlayerAddedConnection = nil
-            end
-
-            if PlayerRemovingConnection then
-                PlayerRemovingConnection:Disconnect()
-                PlayerRemovingConnection = nil
-            end
-        end
-    end
-}, "Toggle")
-
-Tabs.genericscript:Button({
-	Title = "console",
-	Desc = nil,
-    	Callback = function()
-         StarterGui = cloneref(game:GetService("StarterGui"))
-         StarterGui:SetCore("DevConsoleVisible", true)
-    end
-})
-
-_G.HeadSize = 8
-_G.collisionscript = false
-game:GetService('RunService').RenderStepped:connect(function()
-  for i,v in next, game:GetService('Players'):GetPlayers() do
-    if v.Name ~= game:GetService('Players').LocalPlayer.Name then
-      if _G.collisionscript == true then
-        pcall(function()
-          v.Character.HumanoidRootPart.Size = Vector3.new(_G.HeadSize,_G.HeadSize,_G.HeadSize)
-          v.Character.HumanoidRootPart.Transparency = 0.7
-          v.Character.HumanoidRootPart.BrickColor = BrickColor.new("可视化范围")
-          v.Character.HumanoidRootPart.Material = "Neon"
-          v.Character.HumanoidRootPart.CanCollide = false
-        end)
-      else
-        v.Character.HumanoidRootPart.Transparency = 1
-        v.Character.HumanoidRootPart.Size = v.Character.Torso.Size
-      end
-    end
-  end
-end)
-
-Tabs.genericscript:Section({ 
-    Title = " ",
-    TextXAlignment = "Left",
-    TextSize = 6,
-})
-
-Tabs.genericscript:Toggle({
-    Title = "玩家体积",
-    Desc = "",
-    Value = false,
-    Callback = function(Value)
-    _G.collisionscript = Value
-    end
-}, "Toggle")
-
-Tabs.genericscript:Slider({
-    Title = "体积参数",
-    Step = 1,
-    Value = {
-        Min = 2,
-        Max = 720,
-        Default = 8,
-    },
-    Callback = function(value)
-        _G.HeadSize = value
-    end
-})
-
-Tabs.genericscript:Section({ 
-    Title = " ",
-    TextXAlignment = "Left",
-    TextSize = 6,
-})
-
-_G.speedtrue = false
-_G.speedvalue = 6
-game:GetService('RunService').RenderStepped:connect(function()
-  if _G.speedtrue == true then
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = _G.speedvalue
-  end
-end)
-
-Tabs.genericscript:Toggle({
-    Title = "移动速度",
-    Desc = "关闭后需要刷新一下速度",
-    Value = false,
-    Callback = function(Value)
-       _G.speedtrue = Value
-    end
-}, "Toggle")
-
-Tabs.genericscript:Slider({
-    Title = "速度参数",
-    Step = 1,
-    Value = {
-        Min = 6,
-        Max = 1200,
-        Default = 6,
-    },
-    Callback = function(value)
-        _G.speedvalue = value
-    end
-})
-
 --切换角色
 
 Tabs.switchroles:Button({
@@ -966,12 +1000,6 @@ Tabs.switchroles:Button({
     Callback = function()
      reset()
     end
-})
-
-Tabs.switchroles:Section({ 
-    Title = "下列角色",
-    TextXAlignment = "Left",
-    TextSize = 17,
 })
 
 Tabs.switchroles:Section({ 
@@ -1035,6 +1063,19 @@ Tabs.switchroles:Section({
     TextSize = 13,
 })
 
+_G.ChangeCharacterskinvalue = 0
+
+Tabs.switchroles:Input({
+    Title = "皮肤值",
+    Desc = "角色皮肤按顺序输入数字",
+    Value = "",
+    Type = "Input", 
+    Placeholder = "请输入数字",
+    Callback = function(input) 
+        _G.ChangeCharacterskinvalue = input
+    end
+})
+
 if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
     local UnlockData = game:GetService("Players").LocalPlayer.UnlockData
     for _, stringValue in pairs(UnlockData:GetChildren()) do
@@ -1042,7 +1083,7 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
             Title = stringValue.Name,
             Desc = nil,
             Callback = function()
-                local args = {stringValue.Name, 0}
+                local args = {stringValue.Name, _G.ChangeCharacterskinvalue}
                 game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
                 WindUINotify(stringValue.Name)
             end})
@@ -1089,6 +1130,7 @@ Tabs.playergui:Toggle({
     Title = "背包",
     Desc = nil,
     Value = false,
+    Locked = false,
     Callback = function(Value)
         if Value then
           game:GetService("Players").LocalPlayer.PlayerGui.Inventory.Enabled = true
@@ -1166,8 +1208,4 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
         end
     }, "Toggle")
 
-end
-
-
----最后
 end
