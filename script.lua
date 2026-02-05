@@ -1,4 +1,4 @@
-if run == true then
+    if run == true then
   error("中断")
 end
 pcall(function() getgenv().run = true end)
@@ -77,12 +77,15 @@ local Window = WindUI:CreateWindow({
     Title = "STBB",
     Icon = "app-window",
     Folder = "STBB",
+    Resizable = false,
     Size = UDim2.fromOffset(580, 380),
     Transparent = true,
     HideSearchBar = false,
-    Theme = "Dark",
     SideBarWidth = 140,
-    Background = "",
+    KeySystem = { 
+        Key = { "USB" },
+        Note = "密码",
+    },
 })
 
 WindUI:SetNotificationLower(true)
@@ -105,22 +108,19 @@ Window:DisableTopbarButtons({
     "Fullscreen",
 })
 
-Window:Tag({
-    Title = "v1.6.62",
-    Icon = "github",
-    Color = Color3.fromHex("#30ff6a"),
-    Radius = 0, -- from 0 to 13
-})
-
-_G.Lockedgame = false
-
+local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+if PlayerGui:FindFirstChild("003-A") then
+     _G.Lockedgame = false
+else
+     _G.Lockedgame = true
+end
 
 --左边选择
 local Tabs = {
    Announcement_Updates = Window:Tab({ Title = "公告_更新", Icon = "solar:home-2-bold", }),
+   genericscript = Window:Tab({ Title = "通用脚本", Icon = "solar:password-minimalistic-input-bold", }),
    maincontent = Window:Tab({ Title = "主要内容", Icon = "solar:check-square-bold", Locked = _G.Lockedgame, }),
    Remotestore = Window:Tab({ Title = "远程商店", Icon = "solar:cursor-square-bold", Locked = _G.Lockedgame, }),
-   genericscript = Window:Tab({ Title = "通用脚本", Icon = "solar:password-minimalistic-input-bold", }),
    switchroles = Window:Tab({ Title = "切换角色", Icon = "solar:square-transfer-horizontal-bold",Locked = _G.Lockedgame, }),
    playergui = Window:Tab({ Title = "页面类别", Icon = "solar:hamburger-menu-bold", Locked = _G.Lockedgame, }),
 }
@@ -251,12 +251,6 @@ game:GetService('RunService').RenderStepped:connect(function()
   end
 end)
 
-Tabs.genericscript:Section({ 
-    Title = " ",
-    TextXAlignment = "Left",
-    TextSize = 6,
-})
-
 Tabs.genericscript:Toggle({
     Title = "玩家体积",
     Desc = "",
@@ -277,12 +271,6 @@ Tabs.genericscript:Slider({
     Callback = function(value)
         _G.HeadSize = value
     end
-})
-
-Tabs.genericscript:Section({ 
-    Title = " ",
-    TextXAlignment = "Left",
-    TextSize = 6,
 })
 
 _G.speedtrue = false
@@ -338,6 +326,67 @@ Tabs.genericscript:Toggle({
     end
 })
 
+local rs = game:GetService("RunService")
+local ws = game:GetService("Workspace")
+local plrs = game:GetService("Players")
+local lp = plrs.LocalPlayer
+
+local function isnpc(ins)
+    local humanoid = ins:FindFirstChildOfClass("Humanoid")
+    local player = plrs:GetPlayerFromCharacter(ins)
+    return humanoid and not player
+end
+
+function partowner(part)
+	return part.ReceiveAge == 0
+end
+
+local con1
+Tabs.genericscript:Toggle({
+ Title = "秒杀",
+ Desc = nil,
+ Value = false,
+ Locked = false,
+ Callback = function(a)
+    if a then
+		con1 = rs.Stepped:Connect(function()
+			local hrp1 = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+			if not hrp1 then return end
+
+			local nbp = ws:GetPartBoundsInRadius(hrp1.Position, 13)
+			for _, part in pairs(nbp) do
+				local model = part:FindFirstAncestorOfClass("Model")
+				if model and isnpc(model) then
+					local npc = model
+					local hrp = npc:FindFirstChild("HumanoidRootPart")
+					if hrp and partowner(hrp) and not hrp.Anchored and npc ~= lp.Character then
+						local hum = npc:FindFirstChildOfClass("Humanoid")
+						if hum then
+							hum:ChangeState(15)
+						end
+					end
+				end
+			end
+		end)
+	else
+		if con1 then
+			con1:Disconnect()
+			con1 = nil
+		end
+	end
+ end
+})
+
+local rad = 150
+rs.RenderStepped:Connect(function()
+	if sethiddenproperty then
+		sethiddenproperty(lp,"SimulationRadius",rad)
+	else
+		lp.SimulationRadius=rad
+	end
+end)
+
+
 --公告和更新
 
 Tabs.Announcement_Updates:Paragraph({
@@ -349,7 +398,7 @@ Tabs.Announcement_Updates:Paragraph({
         {
             Icon = "bird",
             Title = "不同意",
-            Callback = function() game.Players.LocalPlayer:Kick("") end,
+            Callback = function() game.Players.LocalPlayer:Kick("很抱歉我无法承担后果") end,
         }
     }
 })
@@ -363,7 +412,7 @@ Tabs.Announcement_Updates:Paragraph({
         {
             Icon = "bird",
             Title = "不同意",
-            Callback = function() game.Players.LocalPlayer:Kick("") end,
+            Callback = function() game.Players.LocalPlayer:Kick("很抱歉我无法承担后果") end,
         }
     }
 })
@@ -402,31 +451,6 @@ Tabs.maincontent:Button({
     Locked = false,
     Callback = function()
      reset()
-    end
-})
-
-
-local PlayerCharacter = game:GetService("Players").LocalPlayer.Character
-local Deathreset = false
-game:GetService('RunService').RenderStepped:connect(function()
- if Deathreset == true then
-   if PlayerCharacter.Humanoid.Health < 10 then
-      reset()
-   end
- end
-end)
-
-Tabs.maincontent:Toggle({
-    Title = "死亡重置",
-    Desc = "",
-    Locked = false,
-    Value = false,
-    Callback = function(Value)
-        if Value then
-           Deathreset = true
-        else
-           Deathreset = false
-        end
     end
 })
 
@@ -843,7 +867,7 @@ Tabs.maincontent:Dropdown({
             DriveD.Value = false
         end
         
-        if table.find(option, "传说中的_U盘E") then
+        if table.find(option, "U盘E") then
             DriveE.Value = true
             task.spawn(function() startESPSystem("Drive #E", "U盘E", DriveE) end)
         else
@@ -1100,7 +1124,6 @@ Tabs.playergui:Toggle({
     Title = "商店",
     Desc = nil,
     Value = false,
-    Locked = true,
     Callback = function(Value)
         if Value then
           game:GetService("Players").LocalPlayer.PlayerGui["003-A"].Enabled = true
@@ -1209,3 +1232,32 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
     }, "Toggle")
 
 end
+
+
+--[[
+Tabs.playergui:Section({ 
+    Title = "全部页面",
+    TextXAlignment = "Left",
+    TextSize = 13,
+})
+
+if game:GetService("Players").LocalPlayer.PlayerGui then
+    local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+    for _, stringValue in pairs(PlayerGui:GetChildren()) do
+        Tabs.playergui:Toggle({
+            Title = stringValue.Name,
+            Desc = nil,
+            Value = false,
+            Callback = function(Value)
+                if Value then
+                     stringValue.Enabled = true
+                else
+                     stringValue.Enabled = false
+                end
+            end
+        }, "Toggle")
+    end
+else
+Tabs.playergui:Button({Title = "错误", Desc = "细思极恐", Callback = function() end})
+end
+]]
