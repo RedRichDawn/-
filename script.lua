@@ -1016,6 +1016,13 @@ Tabs.maincontent:Dropdown({
     end
 })
 
+Tabs.maincontent:Button({
+	Title = "去除迷雾",
+    Callback = function()
+           game:GetService("Lighting").Atmosphere:Destroy()
+    end
+})
+
 --远程商店
 
 Tabs.Remotestore:Button({
