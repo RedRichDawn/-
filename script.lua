@@ -1,82 +1,15 @@
-    if run == true then
+if run == true then
   error("中断")
 end
 pcall(function() getgenv().run = true end)
---[[
------------------------------------------------------
-local function hook(Target, text)
-  hookfunction(Target, function(...)
-      game.Players.LocalPlayer:Kick(text)
-      while true do
-         game:Shutdown()
-      end
-  end)
-end
-wait(0.02)
-hook(hookfunction, "lol")
------------------------------------------------------
-local function isRealPlayer(player)
-    for _, p in ipairs(game.Players:GetPlayers()) do
-        if p == player then
-            return true
-        end
-    end
-    return false
-end
------------------------------------------------------
-local httpplayer = {
-  [game:GetService("Players").LocalPlayer.Name] = {
-      UserID = game:GetService("Players").LocalPlayer.UserId,
-      HWID = "xxx"
-  }
-}
---白名单-白名单
------------------------------------------------------
-local HTTPHWID = game:GetService("RbxAnalyticsService"):GetClientId()
-local localPlayer = game.Players.LocalPlayer
-local function checkPermissions()
-    local PlayerTrue = false
-    if httpplayer[localPlayer.Name] then
-        if httpplayer[localPlayer.Name].UserID == localPlayer.UserId then
-            if localPlayer.Character and localPlayer.Character.Name == localPlayer.Name then
-               if isRealPlayer(localPlayer) then
-                  PlayerTrue = true
-               end
-            end
-        end
-    end
-    return PlayerTrue
-end
-local PlayerTrue = checkPermissions()
---检测系统--检测系统
------------------------------------------------------
-if not PlayerTrue then
-    game.Players.LocalPlayer:Kick("You has been banned Reason：hack")
-    wait(0.1)
-    while true do
-        game:Shutdown()
-    end
-end
 
-if not PlayerTrue then
-error("error")
-end
----------------------------------------------------
-repeat wait() until PlayerTrue
-
------------------------------------------------------
---主要的脚本内容
-if PlayerTrue then
-
-]]
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
-
+local t0 = os.clock()   --计时
 
 --编辑
 local Window = WindUI:CreateWindow({
-    Title = "STBB",
+    Title = "标题",
     Icon = "app-window",
-    Folder = "STBB",
     Resizable = false,
     Size = UDim2.fromOffset(580, 380),
     Transparent = true,
@@ -84,7 +17,8 @@ local Window = WindUI:CreateWindow({
     SideBarWidth = 140,
     KeySystem = { 
         Key = { "USB" },
-        Note = "密码",
+        Note = "密码会被保存，下次无需输入",
+        SaveKey = true,
     },
 })
 
@@ -117,8 +51,9 @@ end
 
 --左边选择
 local Tabs = {
-   Announcement_Updates = Window:Tab({ Title = "公告_更新", Icon = "solar:home-2-bold", }),
+   Announcement_Updates = Window:Tab({ Title = "须知事项", Icon = "solar:home-2-bold", }),
    genericscript = Window:Tab({ Title = "通用脚本", Icon = "solar:password-minimalistic-input-bold", }),
+   STBB = Window:Section({Title = "封锁战线", Opened = true, }),
    maincontent = Window:Tab({ Title = "主要内容", Icon = "solar:check-square-bold", Locked = _G.Lockedgame, }),
    Remotestore = Window:Tab({ Title = "远程商店", Icon = "solar:cursor-square-bold", Locked = _G.Lockedgame, }),
    switchroles = Window:Tab({ Title = "切换角色", Icon = "solar:square-transfer-horizontal-bold",Locked = _G.Lockedgame, }),
@@ -186,8 +121,7 @@ local PlayerTips = false
 local PlayerAddedConnection = nil
 local PlayerRemovingConnection = nil
 Tabs.genericscript:Toggle({
-    Title = "玩家提示",
-    Desc = "玩家进入或离开提示",
+    Title = "玩家进入提示",
     Value = false,
     Callback = function(Value)
         PlayerTips = Value
@@ -227,79 +161,6 @@ Tabs.genericscript:Button({
     	Callback = function()
          StarterGui = cloneref(game:GetService("StarterGui"))
          StarterGui:SetCore("DevConsoleVisible", true)
-    end
-})
-
-_G.HeadSize = 8
-_G.collisionscript = false
-game:GetService('RunService').RenderStepped:connect(function()
-  for i,v in next, game:GetService('Players'):GetPlayers() do
-    if v.Name ~= game:GetService('Players').LocalPlayer.Name then
-      if _G.collisionscript == true then
-        pcall(function()
-          v.Character.HumanoidRootPart.Size = Vector3.new(_G.HeadSize,_G.HeadSize,_G.HeadSize)
-          v.Character.HumanoidRootPart.Transparency = 0.7
-          v.Character.HumanoidRootPart.BrickColor = BrickColor.new("可视化范围")
-          v.Character.HumanoidRootPart.Material = "Neon"
-          v.Character.HumanoidRootPart.CanCollide = false
-        end)
-      else
-        v.Character.HumanoidRootPart.Transparency = 1
-        v.Character.HumanoidRootPart.Size = v.Character.Torso.Size
-      end
-    end
-  end
-end)
-
-Tabs.genericscript:Toggle({
-    Title = "玩家体积",
-    Desc = "",
-    Value = false,
-    Callback = function(Value)
-    _G.collisionscript = Value
-    end
-}, "Toggle")
-
-Tabs.genericscript:Slider({
-    Title = "体积参数",
-    Step = 1,
-    Value = {
-        Min = 2,
-        Max = 720,
-        Default = 8,
-    },
-    Callback = function(value)
-        _G.HeadSize = value
-    end
-})
-
-_G.speedtrue = false
-_G.speedvalue = 6
-game:GetService('RunService').RenderStepped:connect(function()
-  if _G.speedtrue == true then
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = _G.speedvalue
-  end
-end)
-
-Tabs.genericscript:Toggle({
-    Title = "移动速度",
-    Desc = "关闭后需要刷新一下速度",
-    Value = false,
-    Callback = function(Value)
-       _G.speedtrue = Value
-    end
-}, "Toggle")
-
-Tabs.genericscript:Slider({
-    Title = "速度参数",
-    Step = 1,
-    Value = {
-        Min = 6,
-        Max = 1200,
-        Default = 6,
-    },
-    Callback = function(value)
-        _G.speedvalue = value
     end
 })
 
@@ -387,47 +248,244 @@ rs.RenderStepped:Connect(function()
 end)
 
 
+_G.speedtrue = false
+_G.speedvalue = 6
+game:GetService('RunService').RenderStepped:connect(function()
+  if _G.speedtrue == true then
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = _G.speedvalue
+  end
+end)
+
+local speed = Tabs.genericscript:Section({ 
+    Title = "移动速度",
+    Box = true,
+})
+
+speed:Toggle({
+    Title = "移动速度",
+    Desc = "关闭后需要刷新一下速度",
+    Value = false,
+    Callback = function(Value)
+       _G.speedtrue = Value
+    end
+}, "Toggle")
+
+speed:Slider({
+    Title = "速度参数",
+    Step = 1,
+    Value = {
+        Min = 6,
+        Max = 1200,
+        Default = 6,
+    },
+    Callback = function(value)
+        _G.speedvalue = value
+    end
+})
+
+_G.HeadSize = 8
+_G.collisionscript = false
+game:GetService('RunService').RenderStepped:connect(function()
+  for i,v in next, game:GetService('Players'):GetPlayers() do
+    if v.Name ~= game:GetService('Players').LocalPlayer.Name then
+      if _G.collisionscript == true then
+        pcall(function()
+          v.Character.HumanoidRootPart.Size = Vector3.new(_G.HeadSize,_G.HeadSize,_G.HeadSize)
+          v.Character.HumanoidRootPart.Transparency = 0.7
+          v.Character.HumanoidRootPart.BrickColor = BrickColor.new("可视化范围")
+          v.Character.HumanoidRootPart.Material = "Neon"
+          v.Character.HumanoidRootPart.CanCollide = false
+        end)
+      else
+        v.Character.HumanoidRootPart.Transparency = 1
+        v.Character.HumanoidRootPart.Size = v.Character.Torso.Size
+      end
+    end
+  end
+end)
+
+local Playersize = Tabs.genericscript:Section({ 
+    Title = "玩家体积",
+    Box = true,
+})
+
+Playersize:Toggle({
+    Title = "玩家体积",
+    Desc = "",
+    Value = false,
+    Callback = function(Value)
+       _G.collisionscript = Value
+    end
+}, "Toggle")
+
+Playersize:Slider({
+    Title = "体积参数",
+    Step = 1,
+    Value = {
+        Min = 2,
+        Max = 720,
+        Default = 8,
+    },
+    Callback = function(value)
+        _G.HeadSize = value
+    end
+})
+
+Tabs.genericscript:Button({
+    Title = "rejoin",
+    Desc = nil,
+    Callback = function()
+        if #game:GetService("Players"):GetPlayers() <= 1 then
+            game:GetService("Players").LocalPlayer:Kick("\nRejoining...")
+            task.wait(1)
+            game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+        else
+            local success, err = pcall(function()
+                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
+            end)
+            if not success then
+                warn("Teleport failed:", err)
+            end
+        end
+    end
+})
+
+
+local allplayergui = Tabs.genericscript:Section({ 
+    Title = "全部页面",
+    Box = true,
+})
+
+if game:GetService("Players").LocalPlayer.PlayerGui then
+    local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
+    for _, stringValue in pairs(PlayerGui:GetChildren()) do
+        if stringValue:IsA("ScreenGui") then
+            if stringValue.Enabled == false then
+                allplayergui:Toggle({
+                     Title = stringValue.Name,
+                     Value = false,
+                     Callback = function(Value)
+                          if Value then
+                               stringValue.Enabled = true
+                          else
+                               stringValue.Enabled = false
+                          end
+                    end
+                }, "Toggle")
+            else
+                allplayergui:Toggle({
+                     Title = stringValue.Name,
+                     Value = true,
+                     Callback = function(Value)
+                          if Value then
+                               stringValue.Enabled = true
+                          else
+                               stringValue.Enabled = false
+                          end
+                    end
+                }, "Toggle")                
+            end    
+        end
+    end
+end
+
+local textreplacement = Tabs.genericscript:Section({Title = "文本替换", Box = true})
+
+_G.KEY1 = game.Players.LocalPlayer.DisplayName
+_G.KEY2 = game.Players.LocalPlayer.Name
+_G.REPLACE_WITH = "InvalidText"
+
+textreplacement:Input({
+    Title = "文本1",
+    Desc = "你的名称:" .. game.Players.LocalPlayer.DisplayName,
+    Value = game.Players.LocalPlayer.DisplayName,
+    InputIcon = "bird",
+    Type = "Input",
+    Placeholder = "请输入文本...",
+    Callback = function(input)
+        _G.KEY1 = input
+    end
+})
+
+textreplacement:Input({
+    Title = "文本2",
+    Desc = "你的用户名:" .. game.Players.LocalPlayer.Name,
+    Value = game.Players.LocalPlayer.Name,
+    InputIcon = "bird",
+    Type = "Input",
+    Placeholder = "请输入文本...",
+    Callback = function(input)
+        _G.KEY2 = input
+    end
+})
+
+textreplacement:Input({
+    Title = "替换文本",
+    Desc = "替换后的文本",
+    Value = "InvalidText",
+    InputIcon = "bird",
+    Type = "Input",
+    Placeholder = "请输入文本...",
+    Callback = function(input)
+        _G.REPLACE_WITH = input
+    end
+})
+
+textreplacement:Button({
+    Title = "确认",
+    Desc = "会卡顿零点几秒",
+    Callback = function()
+        local CASE_SENSITIVE = true
+        local cmp = CASE_SENSITIVE and function(s) return s end or function(s) return s:lower() end
+        local key1 = cmp(_G.KEY1 or "")
+        local key2 = cmp(_G.KEY2 or "")
+        local replaceText = _G.REPLACE_WITH or "InvalidText"
+        for _, obj in ipairs(game:GetDescendants()) do
+            if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                local t = cmp(obj.Text)
+                if t:find(key1, 1, true) or t:find(key2, 1, true) then
+                    obj.Text = replaceText
+                end
+            end
+            local n = cmp(obj.Name)
+            if n:find(key1, 1, true) or n:find(key2, 1, true) then
+                obj.Name = replaceText
+            end
+        end
+    end
+})
+
+
+
 --公告和更新
 
 Tabs.Announcement_Updates:Paragraph({
     Title = "声明",
-    Desc = "如果你的账号因为使用此脚本，受到警告，封禁，此脚本作者不承担责任(默认同意)",
+    Desc = "不乱用，就不会被封，如果封了第一个封的是我",
     Color = "Red",
     Locked = false,
     Buttons = {
         {
             Icon = "bird",
             Title = "不同意",
-            Callback = function() game.Players.LocalPlayer:Kick("很抱歉我无法承担后果") end,
+            Callback = function() game.Players.LocalPlayer:Kick("那你还是别用了") end,
         }
     }
 })
 
 Tabs.Announcement_Updates:Paragraph({
     Title = "使用说明",
-    Desc = "禁止透露此脚本，禁止截屏泄露此脚本，禁止在公服使用",
+    Desc = "不要外传，尽量不要在公共场合使用",
     Color = "Red",
     Locked = false,
     Buttons = {
         {
             Icon = "bird",
             Title = "不同意",
-            Callback = function() game.Players.LocalPlayer:Kick("很抱歉我无法承担后果") end,
+            Callback = function() game.Players.LocalPlayer:Kick("那你还是别用了") end,
         }
     }
 })
-
-local update = [[
--忘了
-________________________________]]
-
-Tabs.Announcement_Updates:Paragraph({
-    Title = "更新公告",
-    Desc = update,
-    Color = "Red",
-    Locked = false,
-})
-
 
 function reset()
     local player = game:GetService("Players").LocalPlayer
@@ -460,52 +518,45 @@ local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local LivingFolder = workspace:WaitForChild("Living")
-
 local MAX_DIST = 5000
-local OFFSET = CFrame.new(0, 3, 0)   -- 头顶 3  studs
-
-function getClosestAlive()
-    local rootPart = (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart"))
-    if not rootPart then return nil end
-
-    local closest, best = nil, MAX_DIST
-    for _, model in ipairs(LivingFolder:GetChildren()) do
-        if model:IsA("Model") then
-            local hum = model:FindFirstChildOfClass("Humanoid")
-            local hrp = model:FindFirstChild("HumanoidRootPart")
-            if hum and hrp and hum.Health > 0 and not Players:GetPlayerFromCharacter(model) then
-                local d = (hrp.Position - rootPart.Position).Magnitude
-                if d < best then
-                    best, closest = d, model
-                end
-            end
-        end
-    end
-    return closest
-end
-
-function teleportToClosestToilet()
-    local target = getClosestAlive()
-    if not target then return end
-
-    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local tgtHrp = target:FindFirstChild("HumanoidRootPart")
-    if hrp and tgtHrp then
-        hrp.CFrame = tgtHrp.CFrame * OFFSET
-    end
-end
+local OFFSET = CFrame.new(0, 3, 0)
 
 Tabs.maincontent:Toggle({
-	Title = "传送最近马桶",
-	Desc = nil,
-	Locked = false,
-	Value = false,
+    Title = "传送最近马桶",
+    Desc = nil,
+    Locked = false,
+    Value = false,
     Callback = function(Value)
-       if Value then
-         RunService:BindToRenderStep("TP", 1, teleportToClosestToilet)
-       else
-         RunService:UnbindFromRenderStep("TP")
-       end
+        if Value then
+            RunService:BindToRenderStep("TP", 1, function()
+                local rootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if not rootPart then return end
+
+                local closest, best = nil, MAX_DIST
+                for _, model in ipairs(LivingFolder:GetChildren()) do
+                    if model:IsA("Model") then
+                        local hum = model:FindFirstChildOfClass("Humanoid")
+                        local hrp = model:FindFirstChild("HumanoidRootPart")
+                        if hum and hrp and hum.Health > 0 and not Players:GetPlayerFromCharacter(model) then
+                            local d = (hrp.Position - rootPart.Position).Magnitude
+                            if d < best then
+                                best, closest = d, model
+                            end
+                        end
+                    end
+                end
+
+                if closest then
+                    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    local tgtHrp = closest:FindFirstChild("HumanoidRootPart")
+                    if hrp and tgtHrp then
+                        hrp.CFrame = tgtHrp.CFrame * OFFSET
+                    end
+                end
+            end)
+        else
+            RunService:UnbindFromRenderStep("TP")
+        end
     end
 })
 
@@ -572,7 +623,7 @@ Tabs.maincontent:Toggle({
 
 local Automaticinteraction = false
 Tabs.maincontent:Toggle({
-    Title = "自动互动",
+    Title = "自动拾取",
     Desc = nil,
     Value = false,
     Locked = false,
@@ -749,17 +800,6 @@ Tabs.maincontent:Button({
     end
 })
 
-
-local clockspider = { Value = false}
-Tabs.maincontent:Button({
-    Title = "时钟检测",
-    Desc = nil,
-    Callback = function()
-       clockspider.Value = true
-       task.spawn(function() startESPSystem("Clock Spider", "时钟蜘蛛", clockspider) end)
-    end
-})
-
 local Keycard = { Value = false }
 local Udisk6 = { Value = false }
 local Udisk5 = { Value = false }
@@ -834,7 +874,7 @@ local DriveD = { Value = false }
 local DriveE = { Value = false }
 Tabs.maincontent:Dropdown({
     Title = "紫色U盘",
-    Values = { "U盘A", "U盘B", "U盘C", "U盘D", "传说中的_U盘E", "前置条件U盘"},
+    Values = { "U盘A", "U盘B", "U盘C", "U盘D", "U盘E", "前置条件U盘"},
     Value = {},
     Multi = true,
     AllowNone = true,
@@ -923,6 +963,55 @@ Tabs.maincontent:Dropdown({
             task.spawn(function() GachaSkins("1SpinLucky", GachaSkins1SpinLucky) end)
         else
             GachaSkins1SpinLucky.Value = false
+        end
+    end
+})
+
+local positioningLightingModule = { Value = false }
+local positioningX18Core = { Value = false }
+local positioningGreenCoreEnergy = { Value = false }
+local positioningEnergyCoreBase = { Value = false }
+local clockspider = { Value = false}
+Tabs.maincontent:Dropdown({
+    Title = "其他材料",
+    Values = { "灯光模块", "18球", "魔方", "绿罐", "时钟蜘蛛" },
+    Value = {},
+    Multi = true,
+    AllowNone = true,
+    Callback = function(option) 
+        if table.find(option, "灯光模块") then
+            positioningLightingModule.Value = true
+            task.spawn(function() startESPSystem("Lighting Module", "灯光模块", positioningLightingModule) end)
+        else
+            positioningLightingModule.Value = false
+        end
+      
+        if table.find(option, "18球") then
+            positioningX18Core.Value = true
+            task.spawn(function() startESPSystem("X18 Core", "x18球", positioningX18Core) end)
+        else
+            positioningX18Core.Value = false
+        end
+      
+        if table.find(option, "魔方") then
+            positioningEnergyCoreBase.Value = true
+            task.spawn(function() startESPSystem("Energy Core Base", "魔方", positioningEnergyCoreBase) end)
+        else
+            positioningEnergyCoreBase.Value = false
+        end
+        
+        if table.find(option, "绿罐") then
+            positioningGreenCoreEnergy.Value = true
+            task.spawn(function() startESPSystem("Green Core Energy", "绿罐", positioningGreenCoreEnergy) end)
+        else
+            positioningGreenCoreEnergy.Value = false
+        end
+        
+        if table.find(option, "时钟蜘蛛") then
+            clockspider.Value = true
+            task.spawn(function() startESPSystem("Clock Spider", "时钟蜘蛛", clockspider) end)
+        else
+            clockspider.Value = false
         end
     end
 })
@@ -1025,6 +1114,65 @@ Tabs.switchroles:Button({
      reset()
     end
 })
+
+local function functionSetTitle(name, Button)
+     Button:SetTitle(name)
+end
+
+local AllCharacterModels = Tabs.switchroles:Section({
+    Title = "展示模型",
+    Box = true,
+})
+
+local cloneTable = {}
+
+if game:GetService("ReplicatedStorage"):FindFirstChild("PlayableCharacter") then
+    local PlayableCharacter = game:GetService("ReplicatedStorage").PlayableCharacter
+    for _, original in pairs(PlayableCharacter:GetChildren()) do
+        if original:IsA("Model") then
+            local btn = AllCharacterModels:Button({
+                Title = original.Name,
+                Callback = function()
+                    local ex = cloneTable[original]
+                    if ex and ex.Parent then
+                        ex:Destroy()
+                        cloneTable[original] = nil
+                    else
+                        local c = original:Clone()
+                        c.Name = original.Name .. "（克隆体）"
+                        c.Parent = workspace:WaitForChild("Living")
+                        c:PivotTo(game.Players.LocalPlayer.Character:GetPivot())
+                        cloneTable[original] = c
+                    end
+                end
+            })
+        end
+    end
+end
+
+if game:GetService("ReplicatedStorage").SkinFolders then
+    local PlayableCharacterskin = game:GetService("ReplicatedStorage").SkinFolders
+    for _, original in pairs(PlayableCharacterskin:GetChildren()) do
+        if original:IsA("Model") then
+            local btn = AllCharacterModels:Button({
+                Title = original.Name,
+                Callback = function()
+                    local ex = cloneTable[original]
+                    if ex and ex.Parent then
+                        ex:Destroy()
+                        cloneTable[original] = nil
+                    else
+                        local c = original:Clone()
+                        c.Name = original.Name .. "（克隆体）"
+                        c.Parent = workspace:WaitForChild("Living")
+                        c:PivotTo(game.Players.LocalPlayer.Character:GetPivot())
+                        cloneTable[original] = c
+                    end
+                end
+            })
+        end
+    end
+end
 
 Tabs.switchroles:Section({ 
     Title = "常用角色",
@@ -1233,31 +1381,4 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
 
 end
 
-
---[[
-Tabs.playergui:Section({ 
-    Title = "全部页面",
-    TextXAlignment = "Left",
-    TextSize = 13,
-})
-
-if game:GetService("Players").LocalPlayer.PlayerGui then
-    local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
-    for _, stringValue in pairs(PlayerGui:GetChildren()) do
-        Tabs.playergui:Toggle({
-            Title = stringValue.Name,
-            Desc = nil,
-            Value = false,
-            Callback = function(Value)
-                if Value then
-                     stringValue.Enabled = true
-                else
-                     stringValue.Enabled = false
-                end
-            end
-        }, "Toggle")
-    end
-else
-Tabs.playergui:Button({Title = "错误", Desc = "细思极恐", Callback = function() end})
-end
-]]
+WindUINotify("运行完毕，耗时:" .. os.clock() - t0)
