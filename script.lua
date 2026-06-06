@@ -4,6 +4,18 @@ end
 pcall(function() getgenv().run = true end)
 
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+WindUI:Notify({
+    Title = "正在加载中，请稍候",
+    Duration = 3,
+})
+
+
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+
 local t0 = os.clock()   --计时
 
 --编辑
@@ -23,6 +35,7 @@ local Window = WindUI:CreateWindow({
 })
 
 WindUI:SetNotificationLower(true)
+Window:IsResizable(false)
 
 Window:EditOpenButton({
     Title = "\t",
@@ -39,7 +52,6 @@ Window:EditOpenButton({
 
 Window:DisableTopbarButtons({
     "Close", 
-    "Fullscreen",
 })
 
 local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
@@ -48,6 +60,7 @@ if PlayerGui:FindFirstChild("003-A") then
 else
      _G.Lockedgame = true
 end
+
 
 --左边选择
 local Tabs = {
@@ -61,6 +74,44 @@ local Tabs = {
 }
 
 
+
+local function rejoin()
+if #game:GetService("Players"):GetPlayers() <= 1 then
+            game:GetService("Players").LocalPlayer:Kick("\nRejoining...")
+            task.wait(1)
+            game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+        else
+            local success, err = pcall(function()
+                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
+            end)
+            if not success then
+                warn("Teleport failed:", err)
+            end
+end
+end
+
+
+--窗口顶部按钮
+Window:CreateTopbarButton("重新进入", "bird",    function()
+WindUI:Popup({
+    Title = "提示",
+    Icon = "info",
+    Content = "确定要重进游戏吗？",
+    Buttons = {
+        {
+            Title = "确定",
+            Callback = function() rejoin() end,
+            Variant = "Tertiary",
+        },
+        {
+            Title = "不了",
+            Icon = "arrow-right",
+            Callback = function() end,
+            Variant = "Primary",
+        }
+    }
+})
+end,  990)
 
 --通用脚本
 
@@ -183,6 +234,30 @@ Tabs.genericscript:Toggle({
           end
       else
           AutomaticinteractionV2 = false
+      end
+    end
+})
+
+
+local AutomaticinteractionV3= false
+Tabs.genericscript:Toggle({
+    Title = "自动点击",
+    Desc = nil,
+    Value = false,
+    Locked = false,
+    Callback = function(Value)
+      if Value then
+          AutomaticinteractionV3 = true
+          while AutomaticinteractionV3 do
+          wait(0.000001)
+              for i,d in pairs(game:GetService("Workspace"):GetDescendants()) do
+                if d.ClassName == 'ClickDetector' then
+                   fireclickdetector(d)
+                end
+              end
+          end
+      else
+          AutomaticinteractionV3 = false
       end
     end
 })
@@ -335,18 +410,24 @@ Tabs.genericscript:Button({
     Title = "rejoin",
     Desc = nil,
     Callback = function()
-        if #game:GetService("Players"):GetPlayers() <= 1 then
-            game:GetService("Players").LocalPlayer:Kick("\nRejoining...")
-            task.wait(1)
-            game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
-        else
-            local success, err = pcall(function()
-                game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game:GetService("Players").LocalPlayer)
-            end)
-            if not success then
-                warn("Teleport failed:", err)
-            end
-        end
+WindUI:Popup({
+    Title = "提示",
+    Icon = "info",
+    Content = "确定要重进游戏吗？",
+    Buttons = {
+        {
+            Title = "确定",
+            Callback = function() rejoin() end,
+            Variant = "Tertiary",
+        },
+        {
+            Title = "不了",
+            Icon = "arrow-right",
+            Callback = function() end,
+            Variant = "Primary",
+        }
+    }
+})
     end
 })
 
@@ -359,6 +440,7 @@ local allplayergui = Tabs.genericscript:Section({
 if game:GetService("Players").LocalPlayer.PlayerGui then
     local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
     for _, stringValue in pairs(PlayerGui:GetChildren()) do
+      task.wait()
         if stringValue:IsA("ScreenGui") then
             if stringValue.Enabled == false then
                 allplayergui:Toggle({
@@ -456,6 +538,161 @@ textreplacement:Button({
 })
 
 
+_G.Lockedgame_tcu = false
+if game.PlaceId == 115220498924607 then
+   _G.Lockedgame_tcu = true
+end
+
+
+local tcu_game_tabs = Tabs.genericscript:Section({Title = "TCU功能", Box = true, Locked = _G.Lockedgame_tcu})
+
+local Speciactoilet_tcu_list = {
+    "Fire Bomber Toilet",
+    "Plane Bomb Toilet",
+    "Plane Bomb Toilet_Variant",
+    "Radiation Barrel Spider Toilet",
+}
+
+tcu_game_tabs:Toggle({
+    Title = "传送马桶",
+    Desc = nil,
+    Locked = false,
+    Value = false,
+    Callback = function(Value)
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local workspace = game:GetService("Workspace")
+        
+        local LocalPlayer = Players.LocalPlayer
+        local LivingFolder = workspace:WaitForChild("Mobs")
+        local MAX_DIST = 5000
+        local OFFSET = CFrame.new(0, 3, 8)
+
+        if Value then
+            RunService:BindToRenderStep("TP", 1, function()
+                if not LocalPlayer.Character then return end
+                
+                local rootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if not rootPart then return end
+
+                local closest, best = nil, MAX_DIST
+                for _, model in ipairs(LivingFolder:GetChildren()) do
+                    if model:IsA("Model") then
+                        local hum = model:FindFirstChildOfClass("Humanoid")
+                        local hrp = model:FindFirstChild("HumanoidRootPart")
+                        
+                        -- IsActive判断：不是Plane Nuke Toilet则通过，是Plane Nuke Toilet且IsActive为false则通过，是Plane Nuke Toilet且IsActive为true则不通过
+                        local shouldSkip = false
+                        if model.Name == "Plane Nuke Toilet" then
+                            local isActiveObj = model:FindFirstChild("IsActive")
+                            if isActiveObj and isActiveObj.Value == true then
+                                shouldSkip = true
+                            end
+                        end
+                        
+                        local isInList = table.find(Speciactoilet_tcu_list, model.Name) ~= nil
+                        
+                        if not shouldSkip 
+                           and hum and hrp and hum.Health > 0 
+                           and not Players:GetPlayerFromCharacter(model) 
+                           and not isInList then
+                            
+                            local d = (hrp.Position - rootPart.Position).Magnitude
+                            if d < best then
+                                best, closest = d, model
+                            end
+                        end
+                    end
+                end
+
+                if closest then
+                    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    local tgtHrp = closest:FindFirstChild("HumanoidRootPart")
+                    if hrp and tgtHrp then
+                        hrp.CFrame = tgtHrp.CFrame * OFFSET
+                    end
+                end
+            end)
+        else
+            pcall(function()
+                RunService:UnbindFromRenderStep("TP")
+            end)
+        end
+    end
+})
+
+
+tcu_game_tabs:Button({
+	Title = "无CD(不能关)",
+	Desc = nil,
+    Callback = function()
+local old
+old = hookfunction(wait, newcclosure(function(...)
+   return old()
+end))
+local balls
+balls = hookfunction(task.wait, newcclosure(function(...)
+   return balls()
+end))
+    end
+})
+
+
+tcu_game_tabs:Toggle({
+    Title = "传送材料",
+    Desc = nil,
+    Locked = false,
+    Value = false,
+    Callback = function(Value)
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local workspace = game:GetService("Workspace")
+        
+        local LocalPlayer = Players.LocalPlayer
+        local MAX_DIST = 5000
+        local OFFSET = CFrame.new(0, 3, 0)
+
+        if Value then
+            RunService:BindToRenderStep("TP", 1, function()
+                if not LocalPlayer.Character then return end
+                
+                local rootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if not rootPart then return end
+
+                local closest, best = nil, MAX_DIST
+                for _, obj in ipairs(workspace:GetDescendants()) do
+                    if obj:FindFirstChild("TouchInterest") then
+                        local pos = obj.Position or (obj:IsA("Model") and (obj:GetPivot().Position))
+                        if pos then
+                            local d = (pos - rootPart.Position).Magnitude
+                            if d < best then
+                                best, closest = d, obj
+                            end
+                        end
+                    end
+                end
+
+                if closest then
+                    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        local cf = closest.CFrame or (closest:IsA("Model") and closest:GetPivot())
+                        if cf then
+                            hrp.CFrame = cf * OFFSET
+                        end
+                    end
+                end
+            end)
+        else
+            pcall(function()
+                RunService:UnbindFromRenderStep("TP")
+            end)
+        end
+    end
+})
+
+
+
+
 
 --公告和更新
 
@@ -487,21 +724,27 @@ Tabs.Announcement_Updates:Paragraph({
     }
 })
 
+
+if _G.Lockedgame then
+  WindUI:Notify({
+    Title = "加载完毕，耗时:" .. string.format("%.1f", os.clock() - t0),
+    Duration = 3,
+  })
+  error("中断")
+end
+
+--主要内容
+
 function reset()
+  if not _G.Lockedgame then
     local player = game:GetService("Players").LocalPlayer
     if workspace:FindFirstChild("Living") and player and player.Character then
         replicatesignal(game:GetService("Players").LocalPlayer.Kill)
     end
+  end
 end
 
-
---窗口顶部按钮
-Window:CreateTopbarButton("重置角色", "bird",    function() reset() end,  990)
-
-
-
---主要内容
-
+Window:CreateTopbarButton("重置角色", "bird",    function() reset() end,  880)
 
 Tabs.maincontent:Button({
     Title = "重置角色",
@@ -513,23 +756,26 @@ Tabs.maincontent:Button({
 })
 
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
-local LocalPlayer = Players.LocalPlayer
-local LivingFolder = workspace:WaitForChild("Living")
-local MAX_DIST = 5000
-local OFFSET = CFrame.new(0, 3, 0)
-
 Tabs.maincontent:Toggle({
     Title = "传送最近马桶",
     Desc = nil,
     Locked = false,
     Value = false,
     Callback = function(Value)
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local workspace = game:GetService("Workspace")
+        
+        local LocalPlayer = Players.LocalPlayer
+        local LivingFolder = workspace:WaitForChild("Living")
+        local MAX_DIST = 5000
+        local OFFSET = CFrame.new(0, 3, 0)
+
         if Value then
             RunService:BindToRenderStep("TP", 1, function()
-                local rootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if not LocalPlayer.Character then return end
+                
+                local rootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
                 if not rootPart then return end
 
                 local closest, best = nil, MAX_DIST
@@ -555,10 +801,13 @@ Tabs.maincontent:Toggle({
                 end
             end)
         else
-            RunService:UnbindFromRenderStep("TP")
+            pcall(function()
+                RunService:UnbindFromRenderStep("TP")
+            end)
         end
     end
 })
+
 
 
 local DeathLaser = false
@@ -649,6 +898,7 @@ Tabs.maincontent:Toggle({
     Title = "准心调整",
     --Image = "bird",
     Value = false,
+    Flag = "crosshair",
     Callback = function(state)
         if state then
             crosshair = true
@@ -667,6 +917,7 @@ Tabs.maincontent:Toggle({
         end
     end
 })
+
 
 local function startESPSystem(target_select, targetname, switch)
     -- 创建ESP标签的函数
@@ -1136,6 +1387,7 @@ local cloneTable = {}
 if game:GetService("ReplicatedStorage"):FindFirstChild("PlayableCharacter") then
     local PlayableCharacter = game:GetService("ReplicatedStorage").PlayableCharacter
     for _, original in pairs(PlayableCharacter:GetChildren()) do
+        task.wait()
         if original:IsA("Model") then
             local btn = AllCharacterModels:Button({
                 Title = original.Name,
@@ -1160,6 +1412,7 @@ end
 if game:GetService("ReplicatedStorage").SkinFolders then
     local PlayableCharacterskin = game:GetService("ReplicatedStorage").SkinFolders
     for _, original in pairs(PlayableCharacterskin:GetChildren()) do
+        task.wait()
         if original:IsA("Model") then
             local btn = AllCharacterModels:Button({
                 Title = original.Name,
@@ -1236,7 +1489,7 @@ Tabs.switchroles:Button({
     end
 })
 
-Tabs.switchroles:Section({ 
+local Hasallrole = Tabs.switchroles:Section({ 
     Title = "拥有角色",
     TextXAlignment = "Left",
     TextSize = 13,
@@ -1244,7 +1497,7 @@ Tabs.switchroles:Section({
 
 _G.ChangeCharacterskinvalue = 0
 
-Tabs.switchroles:Input({
+Hasallrole:Input({
     Title = "皮肤值",
     Desc = "角色皮肤按顺序输入数字",
     Value = "",
@@ -1258,17 +1511,17 @@ Tabs.switchroles:Input({
 if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
     local UnlockData = game:GetService("Players").LocalPlayer.UnlockData
     for _, stringValue in pairs(UnlockData:GetChildren()) do
-        Tabs.switchroles:Button({
+        Hasallrole:Button({
             Title = stringValue.Name,
             Desc = nil,
             Callback = function()
                 local args = {stringValue.Name, _G.ChangeCharacterskinvalue}
                 game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
                 WindUINotify(stringValue.Name)
-            end})
+        end})
     end
 else
-Tabs.switchroles:Button({Title = "错误", Desc = "没角色是吧", Callback = function() end})
+Tabs.switchroles:Button({Title = "错误", Desc = "你角色还没加载完", Callback = function() end})
 end
 
 
@@ -1388,4 +1641,5 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
 
 end
 
-WindUINotify("运行完毕，耗时:" .. os.clock() - t0)
+
+WindUI:Notify({Title = "加载完毕，耗时:" .. string.format("%.1f", os.clock() - t0), Duration = 3,})
