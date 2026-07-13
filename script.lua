@@ -238,27 +238,135 @@ Tabs.genericscript:Toggle({
     end
 })
 
+-- 注意：将变量名改为合法名称，例如 FixedPointTransmission
+local FixedPointTransmission = Tabs.genericscript:Section({Title = "定点传送", Box = true,})
 
-local AutomaticinteractionV3= false
-Tabs.genericscript:Toggle({
-    Title = "自动点击",
+-- 用字符串键存储全局坐标（键名允许特殊字符）
+_G["Fixed-pointTransmission_1"] = Vector3.new(0, 0, 0)
+_G["Fixed-pointTransmission_2"] = Vector3.new(0, 0, 0)
+_G["Fixed-pointTransmission_3"] = Vector3.new(0, 0, 0)
+_G["Fixed-pointTransmission_4"] = Vector3.new(0, 0, 0)
+
+-- 本地缓存
+local points = {
+    _G["Fixed-pointTransmission_1"],
+    _G["Fixed-pointTransmission_2"],
+    _G["Fixed-pointTransmission_3"],
+    _G["Fixed-pointTransmission_4"]
+}
+
+local speed = 1
+local running = false
+local loopCoroutine = nil
+
+local function stopLoop()
+    running = false
+    if loopCoroutine then
+        coroutine.close(loopCoroutine)
+        loopCoroutine = nil
+    end
+end
+
+local function startLoop()
+    stopLoop()
+    running = true
+    loopCoroutine = coroutine.create(function()
+        while running do
+            for i = 1, 4 do
+                if not running then break end
+                local target = points[i]
+                local player = game.Players.LocalPlayer
+                if player and player.Character then
+                    local root = player.Character:FindFirstChild("HumanoidRootPart")
+                        or player.Character:FindFirstChild("Torso")
+                    if root then
+                        root.Position = target
+                    end
+                end
+                task.wait(speed)
+            end
+        end
+    end)
+    coroutine.resume(loopCoroutine)
+end
+
+-- 开关
+FixedPointTransmission:Toggle({
+    Title = "开启传送",
     Desc = nil,
     Value = false,
     Locked = false,
     Callback = function(Value)
-      if Value then
-          AutomaticinteractionV3 = true
-          while AutomaticinteractionV3 do
-          wait(0.000001)
-              for i,d in pairs(game:GetService("Workspace"):GetDescendants()) do
-                if d.ClassName == 'ClickDetector' then
-                   fireclickdetector(d)
-                end
-              end
-          end
-      else
-          AutomaticinteractionV3 = false
-      end
+        if Value then
+            startLoop()
+        else
+            stopLoop()
+        end
+    end
+})
+
+-- 速度输入
+FixedPointTransmission:Input({
+    Title = "速度值",
+    Desc = "单位：秒（支持小数）",
+    Value = "",
+    Type = "Input",
+    Placeholder = "请输入数字",
+    Callback = function(input)
+        local num = tonumber(input)
+        if num and num > 0 then
+            speed = num
+        end
+    end
+})
+
+-- 记录坐标点
+local function recordPoint(index)
+    local player = game.Players.LocalPlayer
+    if not player then return end
+    local char = player.Character
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso")
+    if root then
+        local pos = root.Position
+        points[index] = pos
+        _G["Fixed-pointTransmission_" .. index] = pos
+    end
+end
+
+FixedPointTransmission:Button({
+    Title = "坐标点一",
+    Desc = nil,
+    Locked = false,
+    Callback = function()
+        recordPoint(1)
+    end
+})
+
+FixedPointTransmission:Button({
+    Title = "坐标点二",
+    Desc = nil,
+    Locked = false,
+    Callback = function()
+        recordPoint(2)
+    end
+})
+
+FixedPointTransmission:Button({
+    Title = "坐标点三",
+    Desc = nil,
+    Locked = false,
+    Callback = function()
+        recordPoint(3)
+    end
+})
+
+FixedPointTransmission:Button({
+    Title = "坐标点四",
+    Desc = nil,
+    Locked = false,
+    Callback = function()
+        recordPoint(4)
     end
 })
 
@@ -361,9 +469,9 @@ speed:Slider({
 _G.HeadSize = 8
 _G.collisionscript = false
 game:GetService('RunService').RenderStepped:connect(function()
+ if _G.collisionscript == true then
   for i,v in next, game:GetService('Players'):GetPlayers() do
-    if v.Name ~= game:GetService('Players').LocalPlayer.Name then
-      if _G.collisionscript == true then
+      if v.Name ~= game:GetService('Players').LocalPlayer.Name then
         pcall(function()
           v.Character.HumanoidRootPart.Size = Vector3.new(_G.HeadSize,_G.HeadSize,_G.HeadSize)
           v.Character.HumanoidRootPart.Transparency = 0.7
@@ -375,8 +483,8 @@ game:GetService('RunService').RenderStepped:connect(function()
         v.Character.HumanoidRootPart.Transparency = 1
         v.Character.HumanoidRootPart.Size = v.Character.Torso.Size
       end
-    end
   end
+ end
 end)
 
 local Playersize = Tabs.genericscript:Section({ 
@@ -431,45 +539,6 @@ WindUI:Popup({
     end
 })
 
-
-local allplayergui = Tabs.genericscript:Section({ 
-    Title = "全部页面",
-    Box = true,
-})
-
-if game:GetService("Players").LocalPlayer.PlayerGui then
-    local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
-    for _, stringValue in pairs(PlayerGui:GetChildren()) do
-      task.wait()
-        if stringValue:IsA("ScreenGui") then
-            if stringValue.Enabled == false then
-                allplayergui:Toggle({
-                     Title = stringValue.Name,
-                     Value = false,
-                     Callback = function(Value)
-                          if Value then
-                               stringValue.Enabled = true
-                          else
-                               stringValue.Enabled = false
-                          end
-                    end
-                }, "Toggle")
-            else
-                allplayergui:Toggle({
-                     Title = stringValue.Name,
-                     Value = true,
-                     Callback = function(Value)
-                          if Value then
-                               stringValue.Enabled = true
-                          else
-                               stringValue.Enabled = false
-                          end
-                    end
-                }, "Toggle")                
-            end    
-        end
-    end
-end
 
 local textreplacement = Tabs.genericscript:Section({Title = "文本替换", Box = true})
 
@@ -537,9 +606,8 @@ textreplacement:Button({
     end
 })
 
-
 _G.Lockedgame_tcu = false
-if game.PlaceId == 115220498924607 then
+if game.PlaceId ~= 115220498924607 then
    _G.Lockedgame_tcu = true
 end
 
@@ -757,7 +825,7 @@ Tabs.maincontent:Button({
 
 
 Tabs.maincontent:Toggle({
-    Title = "传送最近马桶",
+    Title = "传送马桶",
     Desc = nil,
     Locked = false,
     Value = false,
@@ -808,54 +876,7 @@ Tabs.maincontent:Toggle({
     end
 })
 
-
-
 local DeathLaser = false
-local isToggled = false
-local button = Instance.new("TextButton")
-button.Text = "死亡激光"
-button.Position = UDim2.new(0.5, 0, 1, -30)
-button.Size = UDim2.new(0, 50, 0, 25)
-button.Visible = true
-button.Font = Enum.Font.SourceSansBold
-button.Draggable = true
-button.TextSize = 18
-button.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "Deathlaser"
-screenGui.Parent = gethui()
-button.Parent = screenGui
-local function updateButtonUI()
-     if isToggled then
-         button.Text = "关闭"
-         button.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
-     else
-         button.Text = "开启"
-         button.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-     end
-end
-
-button.MouseButton1Click:Connect(function()
-      isToggled = not isToggled
-      DeathLaser = isToggled
-      updateButtonUI()
-        
-end)
-
-task.spawn(function()
-      while true do
-         if DeathLaser then
-            local args = {
-                        vector.create(194.2252655029297, -283.3617248535156, -938.0745239257812)
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("VillanArcGasterBlaster"):FireServer(unpack(args))
-         end
-      task.wait()
-      end
-end)
-gethui().Deathlaser.Enabled = false
-
 Tabs.maincontent:Toggle({
     Title = "死亡激光",
     Desc = nil,
@@ -863,10 +884,85 @@ Tabs.maincontent:Toggle({
     Locked = false,
     Callback = function(Value)
       if Value then
-        gethui().Deathlaser.Enabled = true
+        DeathLaser = true
+        while DeathLaser do
+            wait(0.000001)
+            local args = {vector.create(194.2252655029297, -283.3617248535156, -938.0745239257812)}
+            game:GetService("ReplicatedStorage"):WaitForChild("VillanArcGasterBlaster"):FireServer(unpack(args))
+       end
       else
-        gethui().Deathlaser.Enabled = false
+        DeathLaser = false
       end
+    end
+})
+
+
+-- 获取 RemoteEvent
+local SirenTitanSet = game:GetService("ReplicatedStorage"):FindFirstChild("SirenTitanSet")
+if not SirenTitanSet then return end
+
+-- 创建 GUI (但不显示)
+local gui = Instance.new("ScreenGui")
+gui.Name = "SkillButtons"
+gui.Parent = gethui()
+gui.ResetOnSpawn = false
+gui.Enabled = false -- 默认隐藏
+
+-- 容器 (往右30)
+local dock = Instance.new("Frame")
+dock.Size = UDim2.new(0, 70, 0, 200)
+dock.Position = UDim2.new(1, -405, 1, -220)
+dock.BackgroundTransparency = 1
+dock.Parent = gui
+
+local layout = Instance.new("UIListLayout")
+layout.FillDirection = Enum.FillDirection.Vertical
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.VerticalAlignment = Enum.VerticalAlignment.Top
+layout.Padding = UDim.new(0, 10)
+layout.Parent = dock
+
+-- 技能列表
+local skills = {"CresentSlash", "Leap", "SoulPunch"}
+local icons = {"🌙", "⬆️", "👊"}
+
+-- 创建按钮
+for i, name in ipairs(skills) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 50, 0, 50)
+    btn.Position = UDim2.new(0, 0, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(60, 70, 90)
+    btn.Text = icons[i]
+    btn.TextSize = 24
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BorderSizePixel = 0
+    btn.Parent = dock
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        SirenTitanSet:FireServer({ Skill = name })
+    end)
+    
+    btn.TouchTap:Connect(function()
+        SirenTitanSet:FireServer({ Skill = name })
+    end)
+end
+
+-- 放入 Toggle
+Tabs.maincontent:Toggle({
+    Title = "赛壬技能",
+    Desc = nil,
+    Value = false,
+    Locked = false,
+    Callback = function(Value)
+        if Value then
+            gui.Enabled = true  -- 显示
+        else
+            gui.Enabled = false -- 隐藏
+        end
     end
 })
 
@@ -889,6 +985,27 @@ Tabs.maincontent:Toggle({
           end
       else
           Automaticinteraction = false
+      end
+    end
+})
+
+local Autoreset = false
+Tabs.maincontent:Toggle({
+    Title = "自动重置",
+    Desc = nil,
+    Value = false,
+    Locked = false,
+    Callback = function(Value)
+      if Value then
+          Autoreset = true
+          while Autoreset do
+          wait(0.0000000001)
+             if game.Players.LocalPlayer.Character.Humanoid.Health < 500 then
+                reset()
+             end
+          end
+      else
+          Autoreset = false
       end
     end
 })
@@ -1281,7 +1398,7 @@ Tabs.Remotestore:Button({
     Desc = nil,
     Callback = function() 
      local HumanoidRootPart = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
-     HumanoidRootPart.CFrame = CFrame.new(2000, 1000, 2000)
+     HumanoidRootPart.CFrame = CFrame.new(2000000, 1000, 2000)
     end
 })
 
@@ -1377,6 +1494,8 @@ local function functionSetTitle(name, Button)
      Button:SetTitle(name)
 end
 
+
+--[[
 local AllCharacterModels = Tabs.switchroles:Section({
     Title = "展示模型",
     Box = true,
@@ -1433,6 +1552,8 @@ if game:GetService("ReplicatedStorage").SkinFolders then
         end
     end
 end
+]]
+
 
 Tabs.switchroles:Section({ 
     Title = "常用角色",
@@ -1440,54 +1561,33 @@ Tabs.switchroles:Section({
     TextSize = 13,
 })
 
-
-local function WindUINotify(part)
-      WindUI:Notify({Title = "切换提示", Content = "成功切换:" .. part, Duration = 5})
+local function Commonroles(Role, skin, name)
+ Tabs.switchroles:Button({
+    Title = name,
+    Desc = nil,
+    Locked = false,
+    Callback = function()
+       local args = {Role, skin}
+       game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
+       WindUI:Notify({Title = "切换提示", Content = "成功切换:" .. name, Duration = 3})
+    end
+ })
 end
 
-Tabs.switchroles:Button({
-    Title = "神话反派",
-    Desc = nil,
-    Locked = false,
-    Callback = function()
-       local args = {"Brown Camera man", 1}
-       game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-       WindUINotify("Brown Camera man")
-    end
-})
+local Commonroles_Buttons = {
+    {name = "神话反派", Desc = nil, Role = "Brown Camera man", skin = 1},
+    {name = "女三体", Desc = nil, Role = "Tri Soldier Athena (Girl)", skin = 0},
+    {name = "黑音响", Desc = nil, Role = "Dark Speakerman", skin = 2},
+    {name = "首席时钟", Desc = nil, Role = "Clock Man", skin = 0},
+    {name = "迷你utc", Desc = nil, Role = "Jetpacked Double plunger", skin = 4},
+    {name = "工程师", Desc = nil, Role = "Engineer Camera Man", skin = 0},
+    {name = "亡灵法师", Desc = nil, Role = "Head Captain Of The CCTV", skin = 0},
+    {name = "天文大电视", Desc = nil, Role = "Astro Large TV man", skin = 1},
+}
 
-Tabs.switchroles:Button({
-    Title = "女三体",
-    Desc = nil,
-    Locked = false,
-    Callback = function()
-       local args = {"Tri Soldier Athena (Girl)", 0}
-       game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-       WindUINotify("Tri Soldier Athena (Girl)")
-    end
-})
-
-Tabs.switchroles:Button({
-    Title = "黑音响",
-    Desc = nil,
-    Locked = false,
-    Callback = function()
-       local args = {"Dark Speakerman", 2}
-       game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-       WindUINotify("Dark Speakerman")
-    end
-})
-
-Tabs.switchroles:Button({
-    Title = "首席时钟",
-    Desc = nil,
-    Locked = false,
-    Callback = function()
-       local args = {"Clock Man", 0}
-       game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-       WindUINotify("Clock Man")
-    end
-})
+for _, v in ipairs(Commonroles_Buttons) do
+    Commonroles(v.Role, v.skin, v.name)
+end
 
 local Hasallrole = Tabs.switchroles:Section({ 
     Title = "拥有角色",
@@ -1517,7 +1617,7 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
             Callback = function()
                 local args = {stringValue.Name, _G.ChangeCharacterskinvalue}
                 game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-                WindUINotify(stringValue.Name)
+                WindUI:Notify({Title = "切换提示", Content = "成功切换:" .. stringValue.Name, Duration = 3})
         end})
     end
 else
