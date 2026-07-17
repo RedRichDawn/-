@@ -385,51 +385,67 @@ function partowner(part)
 	return part.ReceiveAge == 0
 end
 
-local con1
+local con1 = nil  -- 秒杀循环
+local con2 = nil  -- SimulationRadius 循环
+local rad = 112412400000   -- 自定义半径
+
 Tabs.genericscript:Toggle({
- Title = "秒杀",
- Desc = nil,
- Value = false,
- Locked = false,
- Callback = function(a)
-    if a then
-		con1 = rs.Stepped:Connect(function()
-			local hrp1 = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-			if not hrp1 then return end
+    Title = "秒杀",
+    Desc = nil,
+    Value = false,
+    Locked = false,
+    Callback = function(a)
+        if a then
+            -- 开启秒杀
+            con1 = rs.Stepped:Connect(function()
+                local hrp1 = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+                if not hrp1 then return end
 
-			local nbp = ws:GetPartBoundsInRadius(hrp1.Position, 13)
-			for _, part in pairs(nbp) do
-				local model = part:FindFirstAncestorOfClass("Model")
-				if model and isnpc(model) then
-					local npc = model
-					local hrp = npc:FindFirstChild("HumanoidRootPart")
-					if hrp and partowner(hrp) and not hrp.Anchored and npc ~= lp.Character then
-						local hum = npc:FindFirstChildOfClass("Humanoid")
-						if hum then
-							hum:ChangeState(15)
-						end
-					end
-				end
-			end
-		end)
-	else
-		if con1 then
-			con1:Disconnect()
-			con1 = nil
-		end
-	end
- end
+                local nbp = ws:GetPartBoundsInRadius(hrp1.Position, 13)
+                for _, part in pairs(nbp) do
+                    local model = part:FindFirstAncestorOfClass("Model")
+                    if model and isnpc(model) then
+                        local npc = model
+                        local hrp = npc:FindFirstChild("HumanoidRootPart")
+                        if hrp and partowner(hrp) and not hrp.Anchored and npc ~= lp.Character then
+                            local hum = npc:FindFirstChildOfClass("Humanoid")
+                            if hum then
+                                hum:ChangeState(15)
+                            end
+                        end
+                    end
+                end
+            end)
+
+            -- 同时开启 SimulationRadius 强制设置（只在开启时生效）
+            con2 = rs.RenderStepped:Connect(function()
+                if sethiddenproperty then
+                    sethiddenproperty(lp, "SimulationRadius", rad)
+                else
+                    lp.SimulationRadius = rad
+                end
+            end)
+
+        else
+            -- 关闭秒杀
+            if con1 then
+                con1:Disconnect()
+                con1 = nil
+            end
+            if con2 then
+                con2:Disconnect()
+                con2 = nil
+            end
+
+            -- 恢复 SimulationRadius 为默认（0 表示使用引擎默认值）
+            if sethiddenproperty then
+                sethiddenproperty(lp, "SimulationRadius", 0)
+            else
+                lp.SimulationRadius = 0
+            end
+        end
+    end
 })
-
-local rad = 150
-rs.RenderStepped:Connect(function()
-	if sethiddenproperty then
-		sethiddenproperty(lp,"SimulationRadius",rad)
-	else
-		lp.SimulationRadius=rad
-	end
-end)
-
 
 _G.speedtrue = false
 _G.speedvalue = 6
@@ -606,6 +622,7 @@ textreplacement:Button({
     end
 })
 
+
 _G.Lockedgame_tcu = false
 if game.PlaceId ~= 115220498924607 then
    _G.Lockedgame_tcu = true
@@ -757,9 +774,6 @@ tcu_game_tabs:Toggle({
         end
     end
 })
-
-
-
 
 
 --公告和更新
