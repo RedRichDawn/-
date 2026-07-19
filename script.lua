@@ -370,6 +370,58 @@ FixedPointTransmission:Button({
     end
 })
 
+-- ==================== 秒杀_旧 ====================
+local Secondkilling_old = false
+local oldKillLoop = nil  -- 存储旧秒杀的循环协程
+
+Tabs.genericscript:Toggle({
+    Title = "秒杀_旧",
+    Desc = nil,
+    Value = false,
+    Locked = false,
+    Callback = function(a)
+        if a then
+            Secondkilling_old = true
+
+            -- 设置模拟半径
+            sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", 112412400000)
+            sethiddenproperty(game.Players.LocalPlayer, "MaxSimulationRadius", 112412400000)
+
+            -- 启动循环秒杀（实时查找，不使用缓存）
+            oldKillLoop = task.spawn(function()
+                while Secondkilling_old do
+                    -- 实时遍历 workspace 中的所有 Humanoid
+                    for _, d in ipairs(workspace:GetDescendants()) do
+                        if d:IsA("Humanoid") then
+                            local parent = d.Parent
+                            if parent and parent.Name ~= game.Players.LocalPlayer.Name then
+                                pcall(function()
+                                    if d and d.Parent then
+                                        d.Health = 0
+                                    end
+                                end)
+                            end
+                        end
+                    end
+                    task.wait(0.5)  -- 可调整频率
+                end
+            end)
+
+        else
+            Secondkilling_old = false
+            if oldKillLoop then
+                task.cancel(oldKillLoop)
+                oldKillLoop = nil
+            end
+            -- 恢复 SimulationRadius
+            sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", 0)
+            sethiddenproperty(game.Players.LocalPlayer, "MaxSimulationRadius", 0)
+        end
+    end
+})
+
+
+-- ==================== 秒杀（新） ====================
 local rs = game:GetService("RunService")
 local ws = game:GetService("Workspace")
 local plrs = game:GetService("Players")
@@ -385,9 +437,10 @@ function partowner(part)
 	return part.ReceiveAge == 0
 end
 
-local con1 = nil  -- 秒杀循环
-local con2 = nil  -- SimulationRadius 循环
-local rad = 112412400000   -- 自定义半径
+local con1 = nil  -- 秒杀连接
+local con2 = nil  -- SimulationRadius 连接
+local isEnabled = false  -- 秒杀状态
+local rad = 15000
 
 Tabs.genericscript:Toggle({
     Title = "秒杀",
@@ -396,8 +449,12 @@ Tabs.genericscript:Toggle({
     Locked = false,
     Callback = function(a)
         if a then
-            -- 开启秒杀
+            isEnabled = true
+            
+            -- 秒杀循环
             con1 = rs.Stepped:Connect(function()
+                if not isEnabled then return end
+                
                 local hrp1 = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
                 if not hrp1 then return end
 
@@ -416,18 +473,22 @@ Tabs.genericscript:Toggle({
                     end
                 end
             end)
-
-            -- 同时开启 SimulationRadius 强制设置（只在开启时生效）
+            
+            -- SimulationRadius 设置（只在开启时运行）
             con2 = rs.RenderStepped:Connect(function()
+                if not isEnabled then return end
+                
                 if sethiddenproperty then
                     sethiddenproperty(lp, "SimulationRadius", rad)
                 else
                     lp.SimulationRadius = rad
                 end
             end)
-
+            
         else
-            -- 关闭秒杀
+            isEnabled = false
+            
+            -- 断开所有连接
             if con1 then
                 con1:Disconnect()
                 con1 = nil
@@ -436,8 +497,8 @@ Tabs.genericscript:Toggle({
                 con2:Disconnect()
                 con2 = nil
             end
-
-            -- 恢复 SimulationRadius 为默认（0 表示使用引擎默认值）
+            
+            -- 恢复 SimulationRadius 到默认值
             if sethiddenproperty then
                 sethiddenproperty(lp, "SimulationRadius", 0)
             else
@@ -1405,6 +1466,75 @@ Tabs.maincontent:Button({
     end
 })
 
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SkinFolders = ReplicatedStorage.SkinFolders
+
+-- 获取品质（中文）
+local function getGrade(modelName)
+    if not modelName or modelName == "" then return "空" end
+    local folder = SkinFolders:FindFirstChild(modelName)
+    if folder then
+        local grade = folder:FindFirstChild("Grade")
+        if grade then
+            local map = {
+                Mythical = "神话",
+                Legendary = "传奇",
+                Epic = "精品",
+                Rare = "稀有",
+                Common = "普通"
+            }
+            return map[grade.Value] or grade.Value
+        end
+    end
+    return "未知"
+end
+
+-- 获取显示名称
+local function getDisplayName(modelName)
+    if not modelName or modelName == "" then return "无" end
+    local folder = SkinFolders:FindFirstChild(modelName)
+    if folder then
+        local skinName = folder:FindFirstChild("Skin-Name")
+        if skinName then return skinName.Value end
+    end
+    return modelName
+end
+
+-- 更新显示
+local function updateDisplay(paragraph)
+    local leftName, leftGrade = getDisplayName(ReplicatedStorage["Left GachaSkin"].Value), getGrade(ReplicatedStorage["Left GachaSkin"].Value)
+    local midName, midGrade = getDisplayName(ReplicatedStorage["Mid GachaSkin"].Value), getGrade(ReplicatedStorage["Mid GachaSkin"].Value)
+    local rightName, rightGrade = getDisplayName(ReplicatedStorage["Right GachaSkin"].Value), getGrade(ReplicatedStorage["Right GachaSkin"].Value)
+    
+    local desc = string.format(
+        "左: %s [%s]\n中: %s [%s]\n右: %s [%s]",
+        leftName, leftGrade,
+        midName, midGrade,
+        rightName, rightGrade
+    )
+    paragraph:SetDesc(desc)
+end
+
+-- 创建Paragraph
+local paragraph = Tabs.maincontent:Paragraph({
+    Title = "皮肤刷新",
+    Desc = "加载中..."
+})
+
+-- 监听三个槽位
+for _, slot in ipairs({
+    ReplicatedStorage["Left GachaSkin"],
+    ReplicatedStorage["Mid GachaSkin"],
+    ReplicatedStorage["Right GachaSkin"]
+}) do
+    slot.Changed:Connect(function() updateDisplay(paragraph) end)
+end
+
+-- 立即更新
+updateDisplay(paragraph)
+
+
 --远程商店
 
 Tabs.Remotestore:Button({
@@ -1504,12 +1634,29 @@ Tabs.switchroles:Button({
     end
 })
 
+local player = game:GetService("Players").LocalPlayer
+
+local function updateDisplay(para)
+    local char = player.PlayerValues.Character.Value or "无"
+    local normal = player.PlayerValues.NormalTitan.Value or "无"
+    local special = player.PlayerValues.SpecialTitan.Value or "无"
+    para:SetDesc(string.format("角色: %s\n普通泰坦: %s\n特殊泰坦: %s", char, normal, special))
+end
+
+local para = Tabs.switchroles:Paragraph({Title = "当前角色", Desc = "加载中..."})
+
+for _, v in ipairs({player.PlayerValues.Character, player.PlayerValues.NormalTitan, player.PlayerValues.SpecialTitan}) do
+    v:GetPropertyChangedSignal("Value"):Connect(function() updateDisplay(para) end)
+end
+
+updateDisplay(para)
+
+
+--[[
 local function functionSetTitle(name, Button)
      Button:SetTitle(name)
 end
 
-
---[[
 local AllCharacterModels = Tabs.switchroles:Section({
     Title = "展示模型",
     Box = true,
