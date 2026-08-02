@@ -25,7 +25,7 @@ local Window = WindUI:CreateWindow({
     Resizable = false,
     Size = UDim2.fromOffset(580, 380),
     Transparent = true,
-    HideSearchBar = false,
+    HideSearchBar = true,
     SideBarWidth = 140,
     KeySystem = { 
         Key = { "USB" },
@@ -36,6 +36,68 @@ local Window = WindUI:CreateWindow({
 
 WindUI:SetNotificationLower(true)
 Window:IsResizable(false)
+
+local PingTag = Window:Tag({
+    Title = "Ping: 0ms",
+    Color = Color3.fromRGB(100, 200, 255),
+})
+ 
+task.spawn(function()
+    while true do
+        local success, ping = pcall(function()
+            local Stats = game:GetService("Stats")
+            local pingValue = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+            return math.floor(pingValue)
+        end)
+        
+        if success and ping then
+            PingTag:SetTitle("Ping: " .. ping .. "ms")
+            
+            if ping <= 50 then
+                PingTag:SetColor(Color3.fromRGB(0, 255, 0)) -- Green
+            elseif ping <= 100 then
+                PingTag:SetColor(Color3.fromRGB(255, 200, 0)) -- Yellow
+            elseif ping <= 200 then
+                PingTag:SetColor(Color3.fromRGB(255, 150, 0)) -- Orange
+            else
+                PingTag:SetColor(Color3.fromRGB(255, 0, 0)) -- Red
+            end
+        end
+        
+        task.wait(2)
+    end
+end)
+
+local FPSTag = Window:Tag({
+    Title = "FPS: 0",
+    Color = Color3.fromRGB(100, 150, 255),
+})
+ 
+local RunService = game:GetService("RunService")
+local lastUpdate = tick()
+local frameCount = 0
+ 
+RunService.RenderStepped:Connect(function()
+    frameCount = frameCount + 1
+    local now = tick()
+    
+    if now - lastUpdate >= 1 then
+        local fps = math.floor(frameCount / (now - lastUpdate))
+        FPSTag:SetTitle("FPS: " .. fps)
+        
+        if fps >= 50 then
+            FPSTag:SetColor(Color3.fromRGB(0, 255, 0)) -- Green
+        elseif fps >= 30 then
+            FPSTag:SetColor(Color3.fromRGB(255, 200, 0)) -- Yellow
+        else
+            FPSTag:SetColor(Color3.fromRGB(255, 0, 0)) -- Red
+        end
+        
+        
+        frameCount = 0
+        lastUpdate = now
+    end
+end)
 
 Window:EditOpenButton({
     Title = "\t",
@@ -56,9 +118,9 @@ Window:DisableTopbarButtons({
 
 local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
 if PlayerGui:FindFirstChild("003-A") then
-     _G.Lockedgame = false
+     getfenv().Lockedgame = false
 else
-     _G.Lockedgame = true
+     getfenv().Lockedgame = true
 end
 
 
@@ -67,10 +129,10 @@ local Tabs = {
    Announcement_Updates = Window:Tab({ Title = "须知事项", Icon = "solar:home-2-bold", }),
    genericscript = Window:Tab({ Title = "通用脚本", Icon = "solar:password-minimalistic-input-bold", }),
    STBB = Window:Section({Title = "封锁战线", Opened = true, }),
-   maincontent = Window:Tab({ Title = "主要内容", Icon = "solar:check-square-bold", Locked = _G.Lockedgame, }),
-   Remotestore = Window:Tab({ Title = "远程商店", Icon = "solar:cursor-square-bold", Locked = _G.Lockedgame, }),
-   switchroles = Window:Tab({ Title = "切换角色", Icon = "solar:square-transfer-horizontal-bold",Locked = _G.Lockedgame, }),
-   playergui = Window:Tab({ Title = "页面类别", Icon = "solar:hamburger-menu-bold", Locked = _G.Lockedgame, }),
+   maincontent = Window:Tab({ Title = "主要内容", Icon = "solar:check-square-bold", Locked = getfenv().Lockedgame, }),
+   Remotestore = Window:Tab({ Title = "远程商店", Icon = "solar:cursor-square-bold", Locked = getfenv().Lockedgame, }),
+   switchroles = Window:Tab({ Title = "切换角色", Icon = "solar:square-transfer-horizontal-bold",Locked = getfenv().Lockedgame, }),
+   playergui = Window:Tab({ Title = "页面类别", Icon = "solar:hamburger-menu-bold", Locked = getfenv().Lockedgame, }),
 }
 
 
@@ -238,10 +300,8 @@ Tabs.genericscript:Toggle({
     end
 })
 
--- 注意：将变量名改为合法名称，例如 FixedPointTransmission
 local FixedPointTransmission = Tabs.genericscript:Section({Title = "定点传送", Box = true,})
 
--- 用字符串键存储全局坐标（键名允许特殊字符）
 _G["Fixed-pointTransmission_1"] = Vector3.new(0, 0, 0)
 _G["Fixed-pointTransmission_2"] = Vector3.new(0, 0, 0)
 _G["Fixed-pointTransmission_3"] = Vector3.new(0, 0, 0)
@@ -372,7 +432,7 @@ FixedPointTransmission:Button({
 
 -- ==================== 秒杀_旧 ====================
 local Secondkilling_old = false
-local oldKillLoop = nil  -- 存储旧秒杀的循环协程
+local oldKillLoop = nil
 
 Tabs.genericscript:Toggle({
     Title = "秒杀_旧",
@@ -383,14 +443,11 @@ Tabs.genericscript:Toggle({
         if a then
             Secondkilling_old = true
 
-            -- 设置模拟半径
             sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", 112412400000)
             sethiddenproperty(game.Players.LocalPlayer, "MaxSimulationRadius", 112412400000)
 
-            -- 启动循环秒杀（实时查找，不使用缓存）
             oldKillLoop = task.spawn(function()
                 while Secondkilling_old do
-                    -- 实时遍历 workspace 中的所有 Humanoid
                     for _, d in ipairs(workspace:GetDescendants()) do
                         if d:IsA("Humanoid") then
                             local parent = d.Parent
@@ -403,7 +460,7 @@ Tabs.genericscript:Toggle({
                             end
                         end
                     end
-                    task.wait(0.5)  -- 可调整频率
+                    task.wait(0.5)
                 end
             end)
 
@@ -413,7 +470,6 @@ Tabs.genericscript:Toggle({
                 task.cancel(oldKillLoop)
                 oldKillLoop = nil
             end
-            -- 恢复 SimulationRadius
             sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", 0)
             sethiddenproperty(game.Players.LocalPlayer, "MaxSimulationRadius", 0)
         end
@@ -421,7 +477,6 @@ Tabs.genericscript:Toggle({
 })
 
 
--- ==================== 秒杀（新） ====================
 local rs = game:GetService("RunService")
 local ws = game:GetService("Workspace")
 local plrs = game:GetService("Players")
@@ -437,10 +492,10 @@ function partowner(part)
 	return part.ReceiveAge == 0
 end
 
-local con1 = nil  -- 秒杀连接
-local con2 = nil  -- SimulationRadius 连接
-local isEnabled = false  -- 秒杀状态
-local rad = 15000
+local con1 = nil
+local con2 = nil
+local isEnabled = false
+local rad = 150
 
 Tabs.genericscript:Toggle({
     Title = "秒杀",
@@ -451,7 +506,6 @@ Tabs.genericscript:Toggle({
         if a then
             isEnabled = true
             
-            -- 秒杀循环
             con1 = rs.Stepped:Connect(function()
                 if not isEnabled then return end
                 
@@ -474,7 +528,6 @@ Tabs.genericscript:Toggle({
                 end
             end)
             
-            -- SimulationRadius 设置（只在开启时运行）
             con2 = rs.RenderStepped:Connect(function()
                 if not isEnabled then return end
                 
@@ -488,7 +541,6 @@ Tabs.genericscript:Toggle({
         else
             isEnabled = false
             
-            -- 断开所有连接
             if con1 then
                 con1:Disconnect()
                 con1 = nil
@@ -498,7 +550,6 @@ Tabs.genericscript:Toggle({
                 con2 = nil
             end
             
-            -- 恢复 SimulationRadius 到默认值
             if sethiddenproperty then
                 sethiddenproperty(lp, "SimulationRadius", 0)
             else
@@ -508,11 +559,11 @@ Tabs.genericscript:Toggle({
     end
 })
 
-_G.speedtrue = false
-_G.speedvalue = 6
+getfenv().speedtrue = false
+getfenv().speedvalue = 6
 game:GetService('RunService').RenderStepped:connect(function()
-  if _G.speedtrue == true then
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = _G.speedvalue
+  if getfenv().speedtrue == true then
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed =  getfenv().speedvalue
   end
 end)
 
@@ -526,7 +577,7 @@ speed:Toggle({
     Desc = "关闭后需要刷新一下速度",
     Value = false,
     Callback = function(Value)
-       _G.speedtrue = Value
+       getfenv().speedtrue = Value
     end
 }, "Toggle")
 
@@ -539,18 +590,18 @@ speed:Slider({
         Default = 6,
     },
     Callback = function(value)
-        _G.speedvalue = value
+        getfenv().speedvalue = value
     end
 })
 
-_G.HeadSize = 8
-_G.collisionscript = false
+getfenv().HeadSize = 8
+getfenv().collisionscript = false
 game:GetService('RunService').RenderStepped:connect(function()
- if _G.collisionscript == true then
+ if getfenv().collisionscript == true then
   for i,v in next, game:GetService('Players'):GetPlayers() do
       if v.Name ~= game:GetService('Players').LocalPlayer.Name then
         pcall(function()
-          v.Character.HumanoidRootPart.Size = Vector3.new(_G.HeadSize,_G.HeadSize,_G.HeadSize)
+          v.Character.HumanoidRootPart.Size = Vector3.new(getfenv().HeadSize,getfenv().HeadSize,getfenv().HeadSize)
           v.Character.HumanoidRootPart.Transparency = 0.7
           v.Character.HumanoidRootPart.BrickColor = BrickColor.new("可视化范围")
           v.Character.HumanoidRootPart.Material = "Neon"
@@ -574,7 +625,7 @@ Playersize:Toggle({
     Desc = "",
     Value = false,
     Callback = function(Value)
-       _G.collisionscript = Value
+       getfenv().collisionscript = Value
     end
 }, "Toggle")
 
@@ -587,7 +638,7 @@ Playersize:Slider({
         Default = 8,
     },
     Callback = function(value)
-        _G.HeadSize = value
+        getfenv().HeadSize = value
     end
 })
 
@@ -619,9 +670,9 @@ WindUI:Popup({
 
 local textreplacement = Tabs.genericscript:Section({Title = "文本替换", Box = true})
 
-_G.KEY1 = game.Players.LocalPlayer.DisplayName
-_G.KEY2 = game.Players.LocalPlayer.Name
-_G.REPLACE_WITH = "InvalidText"
+getfenv().KEY1 = game.Players.LocalPlayer.DisplayName
+getfenv().KEY2 = game.Players.LocalPlayer.Name
+getfenv().REPLACE_WITH = "InvalidText"
 
 textreplacement:Input({
     Title = "文本1",
@@ -631,7 +682,7 @@ textreplacement:Input({
     Type = "Input",
     Placeholder = "请输入文本...",
     Callback = function(input)
-        _G.KEY1 = input
+        getfenv().KEY1 = input
     end
 })
 
@@ -643,7 +694,7 @@ textreplacement:Input({
     Type = "Input",
     Placeholder = "请输入文本...",
     Callback = function(input)
-        _G.KEY2 = input
+        getfenv().KEY2 = input
     end
 })
 
@@ -655,7 +706,7 @@ textreplacement:Input({
     Type = "Input",
     Placeholder = "请输入文本...",
     Callback = function(input)
-        _G.REPLACE_WITH = input
+        getfenv().REPLACE_WITH = input
     end
 })
 
@@ -665,9 +716,9 @@ textreplacement:Button({
     Callback = function()
         local CASE_SENSITIVE = true
         local cmp = CASE_SENSITIVE and function(s) return s end or function(s) return s:lower() end
-        local key1 = cmp(_G.KEY1 or "")
-        local key2 = cmp(_G.KEY2 or "")
-        local replaceText = _G.REPLACE_WITH or "InvalidText"
+        local key1 = cmp(getfenv().KEY1 or "")
+        local key2 = cmp(getfenv().KEY2 or "")
+        local replaceText = getfenv().REPLACE_WITH or "InvalidText"
         for _, obj in ipairs(game:GetDescendants()) do
             if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
                 local t = cmp(obj.Text)
@@ -684,13 +735,7 @@ textreplacement:Button({
 })
 
 
-_G.Lockedgame_tcu = false
-if game.PlaceId ~= 115220498924607 then
-   _G.Lockedgame_tcu = true
-end
-
-
-local tcu_game_tabs = Tabs.genericscript:Section({Title = "TCU功能", Box = true, Locked = _G.Lockedgame_tcu})
+local tcu_game_tabs = Tabs.genericscript:Section({Title = "TCU功能", Box = true})
 
 local Speciactoilet_tcu_list = {
     "Fire Bomber Toilet",
@@ -727,7 +772,6 @@ tcu_game_tabs:Toggle({
                         local hum = model:FindFirstChildOfClass("Humanoid")
                         local hrp = model:FindFirstChild("HumanoidRootPart")
                         
-                        -- IsActive判断：不是Plane Nuke Toilet则通过，是Plane Nuke Toilet且IsActive为false则通过，是Plane Nuke Toilet且IsActive为true则不通过
                         local shouldSkip = false
                         if model.Name == "Plane Nuke Toilet" then
                             local isActiveObj = model:FindFirstChild("IsActive")
@@ -836,6 +880,106 @@ tcu_game_tabs:Toggle({
     end
 })
 
+local player = game.Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+
+-- 变量声明
+local infJump = nil
+local infJumpDebounce = false
+local infJumpEnabled = false
+
+-- 跳跃权限功能
+local function ToggleJump()
+    if player and player.Character then
+        local humanoid = player.Character:FindFirstChildWhichIsA("Humanoid")
+        if humanoid then 
+            humanoid.JumpPower = 50
+            humanoid.JumpHeight  = 50
+        end
+    end
+end
+
+-- 无限跳跃功能
+local function ToggleInfJump(enable)
+    infJumpEnabled = enable ~= false
+    if infJump then 
+        infJump:Disconnect() 
+        infJump = nil 
+    end
+    
+    if infJumpEnabled then
+        infJump = UserInputService.JumpRequest:Connect(function()
+            if not jumpEnabled then 
+                return 
+            end
+            
+            if not infJumpDebounce and player and player.Character then
+                local humanoid = player.Character:FindFirstChildWhichIsA("Humanoid")
+                if humanoid then
+                    infJumpDebounce = true
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                    task.wait()
+                    infJumpDebounce = false
+                end
+            end
+        end)
+    end
+end
+
+-- 创建UI开关
+Tabs.genericscript:Button({
+    Title = "跳跃权限",
+    Callback = function()
+        ToggleJump()
+    end
+})
+
+Tabs.genericscript:Toggle({
+    Title = "无限跳跃",
+    Value = false,
+    Callback = function(Value)
+        ToggleInfJump(Value)
+    end
+})
+
+Tabs.genericscript:Toggle({
+    Title = "锁定视角",
+    Desc = nil,
+    Value = false,
+    Locked = false,
+    Callback = function(Value)
+        local P = game.Players.LocalPlayer
+        local C = P.Character
+        if not C then return end
+        local H = C:FindFirstChild("Humanoid")
+        local HRP = C:FindFirstChild("HumanoidRootPart")
+        if not H or not HRP then return end
+        local RS = game:GetService("RunService")
+        local Cam = workspace.CurrentCamera
+        local EO = CFrame.new(0,0,0)
+        local DO = CFrame.new(0,0,0)
+        
+        if Value then
+            H.AutoRotate = false
+            local Con
+            Con = RS.RenderStepped:Connect(function()
+                if not C or not C.Parent then Con:Disconnect() return end
+                local LD = Cam.CFrame.LookVector
+                LD = Vector3.new(LD.X,0,LD.Z)
+                if LD.Magnitude > 0 then
+                    LD = LD.Unit
+                    HRP.CFrame = CFrame.new(HRP.Position, HRP.Position + LD)
+                end
+                Cam.CFrame = Cam.CFrame * EO
+            end)
+            _G.SL = Con
+        else
+            H.AutoRotate = true
+            if _G.SL then _G.SL:Disconnect() _G.SL = nil end
+            Cam.CFrame = Cam.CFrame * DO
+        end
+    end
+})
 
 --公告和更新
 
@@ -868,7 +1012,7 @@ Tabs.Announcement_Updates:Paragraph({
 })
 
 
-if _G.Lockedgame then
+if getfenv().Lockedgame then
   WindUI:Notify({
     Title = "加载完毕，耗时:" .. string.format("%.1f", os.clock() - t0),
     Duration = 3,
@@ -879,7 +1023,7 @@ end
 --主要内容
 
 function reset()
-  if not _G.Lockedgame then
+  if not getfenv().Lockedgame then
     local player = game:GetService("Players").LocalPlayer
     if workspace:FindFirstChild("Living") and player and player.Character then
         replicatesignal(game:GetService("Players").LocalPlayer.Kill)
@@ -897,7 +1041,6 @@ Tabs.maincontent:Button({
      reset()
     end
 })
-
 
 Tabs.maincontent:Toggle({
     Title = "传送马桶",
@@ -962,8 +1105,7 @@ Tabs.maincontent:Toggle({
         DeathLaser = true
         while DeathLaser do
             wait(0.000001)
-            local args = {vector.create(194.2252655029297, -283.3617248535156, -938.0745239257812)}
-            game:GetService("ReplicatedStorage"):WaitForChild("VillanArcGasterBlaster"):FireServer(unpack(args))
+            game:GetService("ReplicatedStorage"):WaitForChild("VillanArcGasterBlaster"):FireServer()
        end
       else
         DeathLaser = false
@@ -972,11 +1114,9 @@ Tabs.maincontent:Toggle({
 })
 
 
--- 获取 RemoteEvent
 local SirenTitanSet = game:GetService("ReplicatedStorage"):FindFirstChild("SirenTitanSet")
 if not SirenTitanSet then return end
 
--- 创建 GUI (但不显示)
 local gui = Instance.new("ScreenGui")
 gui.Name = "SkillButtons"
 gui.Parent = gethui()
@@ -1102,7 +1242,7 @@ Tabs.maincontent:Toggle({
                 local MiddleIcon = ShiftLock.Frame:WaitForChild("MiddleIcon")
                 MiddleIcon.Size = UDim2.new(0.0200000033, 0, 0.204999968, 0)
                 MiddleIcon.Position = UDim2.new(0.5, 0, 0.5, 0) 
-                wait(1)
+                wait(0.1)
             end
         else
             crosshair = false
@@ -1110,354 +1250,141 @@ Tabs.maincontent:Toggle({
     end
 })
 
-
-local function startESPSystem(target_select, targetname, switch)
-    -- 创建ESP标签的函数
+local function startESPSystem(targetName, displayName, switch, location)
     local function createESPLabelForTarget(target)
-        if target then
-            -- 检查目标上是否已经有ESP标签
-            local hasESP = false
-            for _, child in ipairs(target:GetChildren()) do
-                if child:IsA("BillboardGui") and child.Name == "ESPBillboard" then
-                    hasESP = true
-                    break
-                end
-            end
-
-            -- 如果目标上没有ESP标签，则添加标签并提示
-            if not hasESP then
-                -- 使用模型本身
-                local adornee = target
-
-                -- 创建一个BillboardGui来显示ESP文字
-                local billboardGui = Instance.new("BillboardGui")
-                billboardGui.Name = "ESPBillboard"
-                billboardGui.Size = UDim2.new(0, 200, 0, 50)
-                billboardGui.AlwaysOnTop = true
-                billboardGui.Adornee = adornee
-                billboardGui.Parent = target -- 将BillboardGui设置为目标的子对象
-
-                -- 创建一个TextLabel来显示文字
-                local textLabel = Instance.new("TextLabel")
-                textLabel.Name = "ESPText"
-                textLabel.Text = targetname
-                textLabel.Font = Enum.Font.SourceSansBold
-                textLabel.TextSize = 20
-                textLabel.TextColor3 = Color3.new(1, 0, 0) -- 红色文字
-                textLabel.BackgroundTransparency = 1
-                textLabel.Size = UDim2.new(1, 0, 1, 0)
-                textLabel.Parent = billboardGui
-
-                -- 触发通知
-                WindUI:Notify({
-                    Title = targetname .. "出现",
-                    Content = nil,
-                    Duration = 5,
-                })
+        if not target then return end
+        
+        local hasESP = false
+        for _, child in ipairs(target:GetChildren()) do
+            if child:IsA("BillboardGui") and child.Name == "ESPBillboard" then
+                hasESP = true
+                break
             end
         end
-    end
-
-    -- 检测目标并创建ESP标签
-    local function checkTargets()
-        -- 假设目标模型位于workspace中
-        local target = workspace:FindFirstChild(target_select)
-        if target then
-            createESPLabelForTarget(target)
+        
+        if not hasESP then
+            local billboardGui = Instance.new("BillboardGui")
+            billboardGui.Name = "ESPBillboard"
+            billboardGui.Size = UDim2.new(0, 200, 0, 50)
+            billboardGui.AlwaysOnTop = true
+            billboardGui.Adornee = target
+            billboardGui.Parent = target
+            
+            local textLabel = Instance.new("TextLabel")
+            textLabel.Name = "ESPText"
+            textLabel.Text = displayName
+            textLabel.Font = Enum.Font.SourceSansBold
+            textLabel.TextSize = 20
+            textLabel.TextColor3 = Color3.new(1, 0, 0)
+            textLabel.BackgroundTransparency = 1
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.Parent = billboardGui
+            
+            WindUI:Notify({
+                Title = displayName .. "出现",
+                Content = nil,
+                Duration = 5,
+            })
         end
     end
 
     while switch.Value do
-      wait(0.01)
-      checkTargets()
-    end
-
-end
-
-
-Tabs.maincontent:Button({
-    Title = "雷达检测",
-    Desc = nil,
-    Callback = function()
-        local espLabels = {}
-        local detectedTransmitters = {}
-
-        local function createESPLabelForTransmitter(transmitterToilet)
-            if transmitterToilet and not espLabels[transmitterToilet] then
-                local adornee = transmitterToilet:FindFirstChildWhichIsA("BasePart") or transmitterToilet
-
-                local billboardGui = Instance.new("BillboardGui")
-                billboardGui.Name = "ESPBillboard"
-                billboardGui.Size = UDim2.new(0, 200, 0, 50)
-                billboardGui.AlwaysOnTop = true
-                billboardGui.Adornee = adornee
-                billboardGui.Parent = game:GetService("CoreGui")
-
-                local textLabel = Instance.new("TextLabel")
-                textLabel.Name = "ESPText"
-                textLabel.Text = "雷达"
-                textLabel.Font = Enum.Font.SourceSansBold
-                textLabel.TextSize = 20
-                textLabel.TextColor3 = Color3.new(1, 0, 0) 
-                textLabel.BackgroundTransparency = 1
-                textLabel.Size = UDim2.new(1, 0, 1, 0)
-                textLabel.Parent = billboardGui
-
-                espLabels[transmitterToilet] = billboardGui
-            end
-        end
-
-        local function checkTransmitterToilets()
-            local livingFolder = workspace:FindFirstChild("Living")
-            if livingFolder then
-                local transmitterToilets = livingFolder:GetChildren()
-                for _, transmitterToilet in ipairs(transmitterToilets) do
-                    if transmitterToilet.Name == "Transmitter toilet" and not detectedTransmitters[transmitterToilet] then
-                        createESPLabelForTransmitter(transmitterToilet)
-                        WindUI:Notify({
-                          Title = "雷达出现",
-                          Content = nil,
-                          Duration = 5,
-                        })
-                        detectedTransmitters[transmitterToilet] = true
-                    end
-                end
-            end
-
-            for transmitterToilet, billboardGui in pairs(espLabels) do
-                if not transmitterToilet.Parent then
-                    billboardGui:Destroy()
-                    espLabels[transmitterToilet] = nil
-                    detectedTransmitters[transmitterToilet] = nil
+        local parent = workspace
+        if location and location ~= "" then
+            for _, part in ipairs(string.split(location, ".")) do
+                if parent then
+                    parent = parent:FindFirstChild(part)
+                else
+                    break
                 end
             end
         end
-
-        local function startChecking()
-            while wait() do
-                checkTransmitterToilets()
+        
+        if parent then
+            for _, obj in ipairs(parent:GetChildren()) do
+                if obj.Name == targetName then
+                    createESPLabelForTarget(obj)
+                end
             end
         end
-
-        startChecking()
+        wait(0.01)
     end
-})
-
-local Keycard = { Value = false }
-local Udisk6 = { Value = false }
-local Udisk5 = { Value = false }
-local Udisk4 = { Value = false }
-local Udisk3 = { Value = false }
-local Udisk2 = { Value = false }
-local Udisk1 = { Value = false }
-Tabs.maincontent:Dropdown({
-    Title = "闪光U盘",
-    Values = { "U盘1", "U盘2", "U盘3", "U盘4", "U盘5", "U盘6", "门禁卡"},
-    Value = {},
-    Multi = true,
-    AllowNone = true,
-    Callback = function(option) 
-        if table.find(option, "U盘1") then
-            Udisk1.Value = true
-            task.spawn(function() startESPSystem("Flash Drive #1", "U盘1", Udisk1) end)
-        else
-            Udisk1.Value = false
-        end
-
-        if table.find(option, "U盘2") then
-            Udisk2.Value = true
-            task.spawn(function() startESPSystem("Flash Drive #2", "U盘2", Udisk2) end)
-        else
-            Udisk2.Value = false
-        end
-
-        if table.find(option, "U盘3") then
-            Udisk3.Value = true
-            task.spawn(function() startESPSystem("Flash Drive #3", "U盘3", Udisk3) end)
-        else
-            Udisk3.Value = false
-        end
-        
-        if table.find(option, "U盘4") then
-            Udisk4.Value = true
-            task.spawn(function() startESPSystem("Flash Drive #4", "U盘4", Udisk4) end)
-        else
-            Udisk4.Value = false
-        end
-        
-        if table.find(option, "U盘5") then
-            Udisk5.Value = true
-            task.spawn(function() startESPSystem("Flash Drive #5", "U盘5", Udisk5) end)
-        else
-            Udisk5.Value = false
-        end
-        
-        if table.find(option, "U盘6") then
-            Udisk6.Value = true
-            task.spawn(function() startESPSystem("Flash Drive #6", "U盘6", Udisk6) end)
-        else
-            Udisk6.Value = false
-        end
-        
-        if table.find(option, "门禁卡") then
-            Keycard.Value = true
-            task.spawn(function() startESPSystem("Keycard", "门禁卡", Keycard) end)
-        else
-            Keycard.Value = false
-        end
-    end
-})
-
-
-local DriveSdFE0 = { Value = false }
-local DriveA = { Value = false }
-local DriveB = { Value = false }
-local DriveC = { Value = false }
-local DriveD = { Value = false }
-local DriveE = { Value = false }
-Tabs.maincontent:Dropdown({
-    Title = "紫色U盘",
-    Values = { "U盘A", "U盘B", "U盘C", "U盘D", "U盘E", "前置条件U盘"},
-    Value = {},
-    Multi = true,
-    AllowNone = true,
-    Callback = function(option) 
-        if table.find(option, "U盘A") then
-            DriveA.Value = true
-            task.spawn(function() startESPSystem("Drive #A", "U盘A", DriveA) end)
-        else
-            DriveA.Value = false
-        end
-      
-        if table.find(option, "U盘B") then
-            DriveB.Value = true
-            task.spawn(function() startESPSystem("Drive #B", "U盘B", DriveB) end)
-        else
-            DriveB.Value = false
-        end
-      
-        if table.find(option, "U盘C") then
-            DriveC.Value = true
-            task.spawn(function() startESPSystem("Drive #C", "U盘C", DriveC) end)
-        else
-            DriveC.Value = false
-        end
-        
-        if table.find(option, "U盘D") then
-            DriveD.Value = true
-            task.spawn(function() startESPSystem("Drive #D", "U盘D", DriveD) end)
-        else
-            DriveD.Value = false
-        end
-        
-        if table.find(option, "U盘E") then
-            DriveE.Value = true
-            task.spawn(function() startESPSystem("Drive #E", "U盘E", DriveE) end)
-        else
-            DriveE.Value = false
-        end
-        
-        if table.find(option, "前置条件U盘") then
-            DriveSdFE0.Value = true
-            task.spawn(function() startESPSystem("Drive #SdFE0", "前置条件U盘", DriveSdFE0) end)
-        else
-            DriveSdFE0.Value = false
-        end
-    end
-})
-
-local function GachaSkins(Value, kaiguan)
-   while kaiguan.Value do
-      wait(0.001)
-      local args = {
-	      Value
-      }
-      game:GetService("ReplicatedStorage"):WaitForChild("GachaSkins"):FireServer(unpack(args))
-   end
 end
 
-local GachaSkins1Spin = { Value = false }
-local GachaSkins1SpinLucky = { Value = false }
-local GachaSkins10Spins = { Value = false }
+local espGroups = {
+    {
+        title = "闪光U盘",
+        items = {
+            {display = "U盘1", target = "Flash Drive #1"},
+            {display = "U盘2", target = "Flash Drive #2"},
+            {display = "U盘3", target = "Flash Drive #3"},
+            {display = "U盘4", target = "Flash Drive #4"},
+            {display = "U盘5", target = "Flash Drive #5"},
+            {display = "U盘6", target = "Flash Drive #6"},
+            {display = "门禁卡", target = "Keycard"},
+        }
+    },
+    {
+        title = "紫色U盘",
+        items = {
+            {display = "U盘A", target = "Drive #A"},
+            {display = "U盘B", target = "Drive #B"},
+            {display = "U盘C", target = "Drive #C"},
+            {display = "U盘D", target = "Drive #D"},
+            {display = "U盘E", target = "Drive #E"},
+            {display = "前置条件U盘", target = "Drive #SdFE0"},
+        }
+    },
+    {
+        title = "其他材料",
+        items = {
+            {display = "灯光模块", target = "Lighting Module"},
+            {display = "18球", target = "X18 Core"},
+            {display = "魔方", target = "Energy Core Base"},
+            {display = "绿罐", target = "Green Core Energy"},
+            {display = "时钟蜘蛛", target = "Clock Spider"},
+        }
+    },
+    {
+        title = "马桶侦查",
+        location = "Living",
+        items = {
+            {display = "雷达", target = "Transmitter toilet"},
+        }
+    },
+}
 
-Tabs.maincontent:Dropdown({
-    Title = "自动抽奖(皮肤)",
-    Values = { "单抽", "十连", "幸运"},
-    Value = {},
-    Multi = true,
-    AllowNone = true,
-    Callback = function(option) 
-        if table.find(option, "单抽") then
-            GachaSkins1Spin.Value = true
-            task.spawn(function() GachaSkins("1Spin", GachaSkins1Spin) end)
-        else
-            GachaSkins1Spin.Value = false
-        end
-      
-        if table.find(option, "十连") then
-            GachaSkins10Spins.Value = true
-            task.spawn(function() GachaSkins("10Spins", GachaSkins10Spins) end)
-        else
-            GachaSkins10Spins.Value = false
-        end
-      
-        if table.find(option, "幸运") then
-            GachaSkins1SpinLucky.Value = true
-            task.spawn(function() GachaSkins("1SpinLucky", GachaSkins1SpinLucky) end)
-        else
-            GachaSkins1SpinLucky.Value = false
-        end
+for _, group in ipairs(espGroups) do
+    for _, item in ipairs(group.items) do
+        item.switch = { Value = false }
     end
-})
+end
 
-local positioningLightingModule = { Value = false }
-local positioningX18Core = { Value = false }
-local positioningGreenCoreEnergy = { Value = false }
-local positioningEnergyCoreBase = { Value = false }
-local clockspider = { Value = false}
-Tabs.maincontent:Dropdown({
-    Title = "其他材料",
-    Values = { "灯光模块", "18球", "魔方", "绿罐", "时钟蜘蛛" },
-    Value = {},
-    Multi = true,
-    AllowNone = true,
-    Callback = function(option) 
-        if table.find(option, "灯光模块") then
-            positioningLightingModule.Value = true
-            task.spawn(function() startESPSystem("Lighting Module", "灯光模块", positioningLightingModule) end)
-        else
-            positioningLightingModule.Value = false
-        end
-      
-        if table.find(option, "18球") then
-            positioningX18Core.Value = true
-            task.spawn(function() startESPSystem("X18 Core", "x18球", positioningX18Core) end)
-        else
-            positioningX18Core.Value = false
-        end
-      
-        if table.find(option, "魔方") then
-            positioningEnergyCoreBase.Value = true
-            task.spawn(function() startESPSystem("Energy Core Base", "魔方", positioningEnergyCoreBase) end)
-        else
-            positioningEnergyCoreBase.Value = false
-        end
-        
-        if table.find(option, "绿罐") then
-            positioningGreenCoreEnergy.Value = true
-            task.spawn(function() startESPSystem("Green Core Energy", "绿罐", positioningGreenCoreEnergy) end)
-        else
-            positioningGreenCoreEnergy.Value = false
-        end
-        
-        if table.find(option, "时钟蜘蛛") then
-            clockspider.Value = true
-            task.spawn(function() startESPSystem("Clock Spider", "时钟蜘蛛", clockspider) end)
-        else
-            clockspider.Value = false
-        end
+for _, group in ipairs(espGroups) do
+    local values = {}
+    for _, item in ipairs(group.items) do
+        table.insert(values, item.display)
     end
-})
+
+    Tabs.maincontent:Dropdown({
+        Title = group.title,
+        Values = values,
+        Value = {},
+        Multi = true,
+        AllowNone = true,
+        Callback = function(option)
+            for _, item in ipairs(group.items) do
+                local selected = table.find(option, item.display) ~= nil
+                if selected and not item.switch.Value then
+                    item.switch.Value = true
+                    task.spawn(function() startESPSystem(item.target, item.display, item.switch, group.location) end)
+                elseif not selected and item.switch.Value then
+                    item.switch.Value = false
+                end
+            end
+        end
+    })
+end
 
 Tabs.maincontent:Button({
 	Title = "去除迷雾",
@@ -1546,6 +1473,19 @@ Tabs.Remotestore:Button({
     end
 })
 
+local shop = game:GetService("Players").LocalPlayer.PlayerGui["003-A"]
+Tabs.Remotestore:Toggle({
+    Title = "商店",
+    Desc = nil,
+    Value = false,
+    Callback = function(Value)
+        if Value then
+          shop.Enabled = true
+        else
+          shop.Enabled = false
+        end
+    end
+}, "Toggle")
 
 Tabs.Remotestore:Section({ 
     Title = "购买栏",
@@ -1738,12 +1678,13 @@ end
 local Commonroles_Buttons = {
     {name = "神话反派", Desc = nil, Role = "Brown Camera man", skin = 1},
     {name = "女三体", Desc = nil, Role = "Tri Soldier Athena (Girl)", skin = 0},
-    {name = "黑音响", Desc = nil, Role = "Dark Speakerman", skin = 2},
+    {name = "黑音响", Desc = nil, Role = "Dark Speakerman", skin = nil},
     {name = "首席时钟", Desc = nil, Role = "Clock Man", skin = 0},
     {name = "迷你utc", Desc = nil, Role = "Jetpacked Double plunger", skin = 4},
     {name = "工程师", Desc = nil, Role = "Engineer Camera Man", skin = 0},
     {name = "亡灵法师", Desc = nil, Role = "Head Captain Of The CCTV", skin = 0},
     {name = "天文大电视", Desc = nil, Role = "Astro Large TV man", skin = 1},
+    {name = "大时钟", Desc = nil, Role = "Large Clock Man", skin = 0},
 }
 
 for _, v in ipairs(Commonroles_Buttons) do
@@ -1756,7 +1697,7 @@ local Hasallrole = Tabs.switchroles:Section({
     TextSize = 13,
 })
 
-_G.ChangeCharacterskinvalue = 0
+getfenv().ChangeCharacterskinvalue = 0
 
 Hasallrole:Input({
     Title = "皮肤值",
@@ -1765,7 +1706,7 @@ Hasallrole:Input({
     Type = "Input", 
     Placeholder = "请输入数字",
     Callback = function(input) 
-        _G.ChangeCharacterskinvalue = input
+        getfenv().ChangeCharacterskinvalue = input
     end
 })
 
@@ -1776,7 +1717,7 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
             Title = stringValue.Name,
             Desc = nil,
             Callback = function()
-                local args = {stringValue.Name, _G.ChangeCharacterskinvalue}
+                local args = {stringValue.Name, getfenv().ChangeCharacterskinvalue}
                 game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
                 WindUI:Notify({Title = "切换提示", Content = "成功切换:" .. stringValue.Name, Duration = 3})
         end})
@@ -1787,22 +1728,6 @@ end
 
 
 --UI页面
-
-if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
-Tabs.playergui:Toggle({
-    Title = "商店",
-    Desc = nil,
-    Value = false,
-    Callback = function(Value)
-        if Value then
-          game:GetService("Players").LocalPlayer.PlayerGui["003-A"].Enabled = true
-        else
-          game:GetService("Players").LocalPlayer.PlayerGui["003-A"].Enabled = false
-        end
-    end
-}, "Toggle")
-end
-
 
 Tabs.playergui:Toggle({
     Title = "天文货币",
