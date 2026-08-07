@@ -1221,33 +1221,35 @@ Tabs.maincontent:Toggle({
     end
 })
 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local Autoreset = false
+
+-- 获取血量函数（增加错误处理）
 local function getHealth()
-    local char = game.Players.LocalPlayer.Character
-    if char then
-        local hum = char:FindFirstChild("Humanoid")
-        if hum then
-            return hum.Health
-        end
-    end
-    return 0
+    local char = LocalPlayer.Character
+    if not char then return 0 end
+    
+    local hum = char:FindFirstChild("Humanoid")
+    return hum and hum.Health or 0
 end
 
-getfenv().Autoreset == false
-game:GetService('RunService').RenderStepped:connect(function()
-  if getfenv().Autoreset == true then
-      if getHealth() < 500 then
-         reset()
-      end
-  end
+-- 使用 Heartbeat 替代 RenderStepped（更稳定）
+RunService.Heartbeat:Connect(function()
+    if Autoreset and getHealth() < 500 then
+        reset()
+    end
 end)
 
+-- UI 开关（假设你使用的UI库）
 Tabs.maincontent:Toggle({
     Title = "自动重置",
-    Desc = nil,
+    Desc = "",
     Value = false,
-    Locked = false,
     Callback = function(Value)
-         getfenv().Autoreset = Value
+        Autoreset = Value
     end
 })
 
@@ -1668,6 +1670,13 @@ Hasallrole:Input({
     end
 })
 
+
+
+local roleLookup = {}
+for _, btn in ipairs(Commonroles_Buttons) do
+    roleLookup[btn.Role] = true
+end
+
 local Character = Hasallrole:HStack()
 local LeftVStack = Character:VStack()
 local RightVStack = Character:VStack()
@@ -1676,19 +1685,19 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
     local UnlockData = game:GetService("Players").LocalPlayer.UnlockData
     local index = 0
     for _, stringValue in pairs(UnlockData:GetChildren()) do
-      if stringValue.Name ~= Commonroles_Buttons.Role then
-        index = index + 1
-        local targetStack = (index % 2 == 1) and LeftVStack or RightVStack
-        targetStack:Button({
-            Title = stringValue.Name,
-            Desc = nil,
-            Callback = function()
-                local args = {stringValue.Name, getfenv().ChangeCharacterskinvalue}
-                game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-                WindUI:Notify({Title = "切换提示", Content = "成功切换:" .. stringValue.Name, Duration = 3})
-            end
-        })
-      end
+        if not roleLookup[stringValue.Name] then
+            index = index + 1
+            local targetStack = (index % 2 == 1) and LeftVStack or RightVStack
+            targetStack:Button({
+                Title = stringValue.Name,
+                Desc = nil,
+                Callback = function()
+                    local args = {stringValue.Name, getfenv().ChangeCharacterskinvalue}
+                    game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
+                    WindUI:Notify({Title = "切换提示", Content = "成功切换:" .. stringValue.Name, Duration = 3})
+                end
+            })
+        end
     end
 end
 
