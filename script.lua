@@ -1221,24 +1221,33 @@ Tabs.maincontent:Toggle({
     end
 })
 
-local Autoreset = false
+local function getHealth()
+    local char = game.Players.LocalPlayer.Character
+    if char then
+        local hum = char:FindFirstChild("Humanoid")
+        if hum then
+            return hum.Health
+        end
+    end
+    return 0
+end
+
+getfenv().Autoreset == false
+game:GetService('RunService').RenderStepped:connect(function()
+  if getfenv().Autoreset == true then
+      if getHealth() < 500 then
+         reset()
+      end
+  end
+end)
+
 Tabs.maincontent:Toggle({
     Title = "自动重置",
     Desc = nil,
     Value = false,
     Locked = false,
     Callback = function(Value)
-      if Value then
-          Autoreset = true
-          while Autoreset do
-          wait(0.0000000001)
-             if game.Players.LocalPlayer.Character.Humanoid.Health < 500 then
-                reset()
-             end
-          end
-      else
-          Autoreset = false
-      end
+         getfenv().Autoreset = Value
     end
 })
 
@@ -1612,6 +1621,7 @@ local Commonroles_Buttons = {
     {name = "神话反派", Desc = nil, Role = "Brown Camera man", skin = 1},
     {name = "女三体", Desc = nil, Role = "Tri Soldier Athena (Girl)", skin = 0},
     {name = "黑音响", Desc = nil, Role = "Dark Speakerman", skin = 0},
+    {name = "普罗", Desc = nil, Role = "Prometheus", skin = 0},
     {name = "首席时钟", Desc = nil, Role = "Clock Man", skin = 0},
     {name = "迷你utc", Desc = nil, Role = "Jetpacked Double plunger", skin = 4},
     {name = "工程师", Desc = nil, Role = "Engineer Camera Man", skin = 0},
