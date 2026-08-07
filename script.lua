@@ -880,8 +880,8 @@ local function ToggleJump()
     if player and player.Character then
         local humanoid = player.Character:FindFirstChildWhichIsA("Humanoid")
         if humanoid then 
-            humanoid.JumpPower = 50
-            humanoid.JumpHeight  = 50
+            humanoid.JumpPower = 50  -- 默认跳跃力量
+            -- humanoid.JumpHeight = 50 -- JumpHeight在Humanoid中可能不存在
         end
     end
 end
@@ -889,6 +889,7 @@ end
 -- 无限跳跃功能
 local function ToggleInfJump(enable)
     infJumpEnabled = enable ~= false
+    
     if infJump then 
         infJump:Disconnect() 
         infJump = nil 
@@ -896,7 +897,7 @@ local function ToggleInfJump(enable)
     
     if infJumpEnabled then
         infJump = UserInputService.JumpRequest:Connect(function()
-            if not jumpEnabled then 
+            if not infJumpEnabled then
                 return 
             end
             
@@ -905,7 +906,7 @@ local function ToggleInfJump(enable)
                 if humanoid then
                     infJumpDebounce = true
                     humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                    task.wait()
+                    task.wait(0.1)
                     infJumpDebounce = false
                 end
             end
@@ -913,7 +914,9 @@ local function ToggleInfJump(enable)
     end
 end
 
--- 创建UI开关
+local Tabs = Tabs or {}
+Tabs.genericscript = Tabs.genericscript or {}
+
 Tabs.genericscript:Button({
     Title = "跳跃权限",
     Callback = function()
@@ -1670,7 +1673,72 @@ Hasallrole:Input({
     end
 })
 
+local translations = {
+    ["test"] = "测试",
+    ["Drill Titan"] = "钻头泰坦",
+    ["Stellar Titan"] = "恒星泰坦",
+    ["Alarm Clock Man"] = "闹钟人",
+    ["Upgraded Strider Camera"] = "升级版徒步摄像机",
+    ["Head Captain:CompleteQuest"] = "队长：完成任务",
+    ["Siren Titan:CompleteQuest"] = "警报泰坦：完成任务",
+    ["Large Drill Man"] = "大型钻头人",
+    ["Big Camera man"] = "大摄像人",
+    ["SirenSpeaker Helicopter:Mastery:60"] = "警报扬声直升机：精通：60",
+    ["DJ Toilet 2.0"] = "DJ厕所2.0",
+    ["Upgraded Titan TV:CompleteQuest"] = "升级版泰坦电视：完成任务",
+    ["Prometheus:CompleteQuest"] = "普罗米修斯：完成任务",
+    ["TV woman"] = "电视女",
+    ["DJ Toilet"] = "DJ厕所",
+    ["Clock Titan"] = "时钟泰坦",
+    ["Camera Strider"] = "摄像机徒步者",
+    ["Camera man 3.0"] = "摄像人3.0",
+    ["Camera man"] = "摄像人",
+    ["Siren Titan"] = "警报泰坦",
+    ["AstroTechLvI"] = "太空科技LvI",
+    ["Upgraded Titan Cameraman"] = "升级版泰坦摄像人",
+    ["SirenSpeaker Strider:Mastery:80"] = "警报扬声徒步者：精通：80",
+    ["Titan Camera"] = "泰坦摄像机",
+    ["Scientist Camera man"] = "科学家摄像人",
+    ["Speaker woman"] = "扬声女",
+    ["Scientist Camera man:CompleteQuest"] = "科学家摄像人：完成任务",
+    ["Upgraded Titan TV"] = "升级版泰坦电视",
+    ["G-Toilet Z"] = "G厕所Z",
+    ["Camera Toilet"] = "摄像机厕所",
+    ["Chief Engineer Camera"] = "首席工程师摄像机",
+    ["Upgraded Titan Speaker"] = "升级版泰坦扬声器",
+    ["Big Camera man 3.0"] = "大摄像人3.0",
+    ["Titan Speaker toilet"] = "泰坦扬声厕所",
+    ["Drill Man"] = "钻头人",
+    ["Camera woman"] = "摄像女",
+    ["Buzzsaw Mutant"] = "圆锯突变体",
+    ["Tv man"] = "电视人",
+    ["TV Titan(Alt)"] = "电视泰坦（替代）",
+    ["Elite Speakerman"] = "精英扬声人",
+    ["engineer camera man:CompleteQuest"] = "工程师摄像人：完成任务",
+    ["Double plungers:CompleteQuest"] = "双马桶搋子：完成任务",
+    ["Espada #1"] = "圣剑#1",
+    ["UpgradedStriderCamera:CompleteQuest"] = "升级版徒步摄像机：完成任务",
+    ["SirenUpgraded Titan Speaker:Mastery:100"] = "警报升级版泰坦扬声器：精通：100",
+    ["Double plungers"] = "双马桶搋子",
+    ["Large TV man"] = "大型电视人",
+    ["Scientist Screen Man:CompleteQuest"] = "科学家屏幕人：完成任务",
+    ["Titan Speaker"] = "泰坦扬声器",
+    ["Projector Titan"] = "投影泰坦",
+    ["Scientist TV Man"] = "科学家电视人",
+    ["Tri Soldier Artemis (Guy)"] = "三战士阿尔忒弥斯（盖伊）",
+    ["Speaker man"] = "扬声人",
+    ["Dark Speakerman:CompleteQuest"] = "黑暗扬声人：完成任务",
+    ["AstroTechLvII"] = "太空科技LvII",
+    ["Energized TV"] = "充能电视",
+    ["Titan Camera Toilet"] = "泰坦摄像机厕所",
+    ["Glitch Double plunger"] = "故障无双",
+    ["Large Speaker man"] = "大音响",
+    ["Speaker Helicopter"] = "扬声直升机"
+}
 
+local function translate(text)
+    return translations[text] or text
+end
 
 local roleLookup = {}
 for _, btn in ipairs(Commonroles_Buttons) do
@@ -1689,7 +1757,7 @@ if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
             index = index + 1
             local targetStack = (index % 2 == 1) and LeftVStack or RightVStack
             targetStack:Button({
-                Title = stringValue.Name,
+                Title = translate(stringValue.Name),
                 Desc = nil,
                 Callback = function()
                     local args = {stringValue.Name, getfenv().ChangeCharacterskinvalue}
