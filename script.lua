@@ -1,7 +1,8 @@
-if run == true then
-  error("中断")
+if getgenv().Window then
+    getgenv().Window:Destroy()
+    task.wait(0.5)
 end
-pcall(function() getgenv().run = true end)
+
 
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
@@ -19,7 +20,7 @@ end
 local t0 = os.clock()   --计时
 
 --编辑
-local Window = WindUI:CreateWindow({
+getgenv().Window = WindUI:CreateWindow({
     Title = "标题",
     Icon = "app-window",
     Resizable = false,
@@ -36,6 +37,7 @@ local Window = WindUI:CreateWindow({
 
 WindUI:SetNotificationLower(true)
 Window:IsResizable(false)
+--Window:DisableTopbarButtons({"Close",})
 
 local PingTag = Window:Tag({
     Title = "Ping: 0ms",
@@ -112,10 +114,6 @@ Window:EditOpenButton({
     Draggable = true,
 })
 
-Window:DisableTopbarButtons({
-    "Close", 
-})
-
 local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
 if PlayerGui:FindFirstChild("003-A") then
      getfenv().Lockedgame = false
@@ -138,7 +136,7 @@ local Tabs = {
 
 
 local function rejoin()
-if #game:GetService("Players"):GetPlayers() <= 1 then
+        if #game:GetService("Players"):GetPlayers() <= 1 then
             game:GetService("Players").LocalPlayer:Kick("\nRejoining...")
             task.wait(1)
             game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
@@ -149,7 +147,7 @@ if #game:GetService("Players"):GetPlayers() <= 1 then
             if not success then
                 warn("Teleport failed:", err)
             end
-end
+        end
 end
 
 
@@ -203,8 +201,8 @@ Tabs.genericscript:Toggle({
 Tabs.genericscript:Button({
 	Title = "Infinite Yield",
 	Desc = nil,
-    	Callback = function()
-loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
     end
 })
 
@@ -340,7 +338,10 @@ local function startLoop()
                     local root = player.Character:FindFirstChild("HumanoidRootPart")
                         or player.Character:FindFirstChild("Torso")
                     if root then
-                        root.Position = target
+                        local cframe = CFrame.new(target)
+                        local currentPivot = root:GetPivot()
+                        local newCFrame = CFrame.new(target) * (currentPivot - currentPivot.Position)
+                        root:PivotTo(newCFrame)
                     end
                 end
                 task.wait(speed)
@@ -522,6 +523,7 @@ Tabs.genericscript:Toggle({
                             local hum = npc:FindFirstChildOfClass("Humanoid")
                             if hum then
                                 hum:ChangeState(15)
+                                hum.Sit = true
                             end
                         end
                     end
@@ -671,30 +673,16 @@ WindUI:Popup({
 local textreplacement = Tabs.genericscript:Section({Title = "文本替换", Box = true})
 
 getfenv().KEY1 = game.Players.LocalPlayer.DisplayName
-getfenv().KEY2 = game.Players.LocalPlayer.Name
 getfenv().REPLACE_WITH = "InvalidText"
 
 textreplacement:Input({
-    Title = "文本1",
-    Desc = "你的名称:" .. game.Players.LocalPlayer.DisplayName,
+    Title = "文本",
     Value = game.Players.LocalPlayer.DisplayName,
     InputIcon = "bird",
     Type = "Input",
     Placeholder = "请输入文本...",
     Callback = function(input)
         getfenv().KEY1 = input
-    end
-})
-
-textreplacement:Input({
-    Title = "文本2",
-    Desc = "你的用户名:" .. game.Players.LocalPlayer.Name,
-    Value = game.Players.LocalPlayer.Name,
-    InputIcon = "bird",
-    Type = "Input",
-    Placeholder = "请输入文本...",
-    Callback = function(input)
-        getfenv().KEY2 = input
     end
 })
 
@@ -717,17 +705,16 @@ textreplacement:Button({
         local CASE_SENSITIVE = true
         local cmp = CASE_SENSITIVE and function(s) return s end or function(s) return s:lower() end
         local key1 = cmp(getfenv().KEY1 or "")
-        local key2 = cmp(getfenv().KEY2 or "")
         local replaceText = getfenv().REPLACE_WITH or "InvalidText"
         for _, obj in ipairs(game:GetDescendants()) do
             if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
                 local t = cmp(obj.Text)
-                if t:find(key1, 1, true) or t:find(key2, 1, true) then
+                if t:find(key1, 1, true) then
                     obj.Text = replaceText
                 end
             end
             local n = cmp(obj.Name)
-            if n:find(key1, 1, true) or n:find(key2, 1, true) then
+            if n:find(key1, 1, true) then
                 obj.Name = replaceText
             end
         end
@@ -1034,6 +1021,36 @@ end
 Window:CreateTopbarButton("重置角色", "bird",    function() reset() end,  880)
 
 Tabs.maincontent:Button({
+    Title = "重建角色",
+    Desc = nil,
+    Locked = false,
+    Callback = function()
+        function getRoot(char)
+	       if char and char:FindFirstChildOfClass("Humanoid") then
+	        	return char:FindFirstChildOfClass("Humanoid").RootPart
+        	else
+	        	return nil
+        	end
+        end
+
+        local plr = game.Players.LocalPlayer
+        local char = plr.Character
+        local hum = char:FindFirstChildWhichIsA("Humanoid")
+    	local archive = workspace.FallenPartsDestroyHeight
+    	local camType = workspace.CurrentCamera.CameraType
+    	workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
+    	workspace.FallenPartsDestroyHeight = 0/0
+        getRoot(char).Position = Vector3.yAxis * archive
+    	task.wait(plr:GetNetworkPing())
+    	workspace.FallenPartsDestroyHeight = archive
+	    repeat task.wait() until not char.Parent or not hum.Parent or (hum and hum.Health <= 0)
+--	    if hum then
+--	    	hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+ --    	end
+    end
+})
+
+Tabs.maincontent:Button({
     Title = "重置角色",
     Desc = nil,
     Locked = false,
@@ -1250,44 +1267,7 @@ Tabs.maincontent:Toggle({
     end
 })
 
-local function startESPSystem(targetName, displayName, switch, location)
-    local function createESPLabelForTarget(target)
-        if not target then return end
-        
-        local hasESP = false
-        for _, child in ipairs(target:GetChildren()) do
-            if child:IsA("BillboardGui") and child.Name == "ESPBillboard" then
-                hasESP = true
-                break
-            end
-        end
-        
-        if not hasESP then
-            local billboardGui = Instance.new("BillboardGui")
-            billboardGui.Name = "ESPBillboard"
-            billboardGui.Size = UDim2.new(0, 200, 0, 50)
-            billboardGui.AlwaysOnTop = true
-            billboardGui.Adornee = target
-            billboardGui.Parent = target
-            
-            local textLabel = Instance.new("TextLabel")
-            textLabel.Name = "ESPText"
-            textLabel.Text = displayName
-            textLabel.Font = Enum.Font.SourceSansBold
-            textLabel.TextSize = 20
-            textLabel.TextColor3 = Color3.new(1, 0, 0)
-            textLabel.BackgroundTransparency = 1
-            textLabel.Size = UDim2.new(1, 0, 1, 0)
-            textLabel.Parent = billboardGui
-            
-            WindUI:Notify({
-                Title = displayName .. "出现",
-                Content = nil,
-                Duration = 5,
-            })
-        end
-    end
-
+local function startESPSystem(targetName, displayName, switch, location, espObjects)
     while switch.Value do
         local parent = workspace
         if location and location ~= "" then
@@ -1303,12 +1283,51 @@ local function startESPSystem(targetName, displayName, switch, location)
         if parent then
             for _, obj in ipairs(parent:GetChildren()) do
                 if obj.Name == targetName then
-                    createESPLabelForTarget(obj)
+                    local alreadyExists = false
+                    for _, esp in ipairs(espObjects) do
+                        if esp.target == obj then
+                            alreadyExists = true
+                            break
+                        end
+                    end
+                    if not alreadyExists then
+                        local billboardGui = Instance.new("BillboardGui")
+                        billboardGui.Name = "ESPBillboard"
+                        billboardGui.Size = UDim2.new(0, 200, 0, 50)
+                        billboardGui.AlwaysOnTop = true
+                        billboardGui.Adornee = obj
+                        billboardGui.Parent = gethui()
+
+                        local textLabel = Instance.new("TextLabel")
+                        textLabel.Name = "ESPText"
+                        textLabel.Text = displayName
+                        textLabel.Font = Enum.Font.SourceSansBold
+                        textLabel.TextSize = 20
+                        textLabel.TextColor3 = Color3.new(1, 0, 0)
+                        textLabel.BackgroundTransparency = 1
+                        textLabel.Size = UDim2.new(1, 0, 1, 0)
+                        textLabel.Parent = billboardGui
+
+                        table.insert(espObjects, {billboard = billboardGui, target = obj})
+
+                        WindUI:Notify({
+                            Title = displayName .. "出现",
+                            Content = nil,
+                            Duration = 5,
+                        })
+                    end
                 end
             end
         end
         wait(0.01)
     end
+
+    for _, esp in ipairs(espObjects) do
+        if esp.billboard then
+            esp.billboard:Destroy()
+        end
+    end
+    table.clear(espObjects)
 end
 
 local espGroups = {
@@ -1357,6 +1376,7 @@ local espGroups = {
 for _, group in ipairs(espGroups) do
     for _, item in ipairs(group.items) do
         item.switch = { Value = false }
+        item.espObjects = {}
     end
 end
 
@@ -1377,7 +1397,9 @@ for _, group in ipairs(espGroups) do
                 local selected = table.find(option, item.display) ~= nil
                 if selected and not item.switch.Value then
                     item.switch.Value = true
-                    task.spawn(function() startESPSystem(item.target, item.display, item.switch, group.location) end)
+                    task.spawn(function()
+                        startESPSystem(item.target, item.display, item.switch, group.location, item.espObjects)
+                    end)
                 elseif not selected and item.switch.Value then
                     item.switch.Value = false
                 end
@@ -1463,36 +1485,24 @@ updateDisplay(paragraph)
 
 
 --远程商店
-
+--[[
 Tabs.Remotestore:Button({
     Title = "返回大厅",
     Desc = nil,
     Callback = function() 
-     local HumanoidRootPart = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
-     HumanoidRootPart.CFrame = CFrame.new(2000000, 1000, 2000)
+        local plr = game.Players.LocalPlayer
+        local char = plr.Character
+        local hum = char:FindFirstChildWhichIsA("Humanoid")
+        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
     end
 })
-
-local shop = game:GetService("Players").LocalPlayer.PlayerGui["003-A"]
-Tabs.Remotestore:Toggle({
-    Title = "商店",
-    Desc = nil,
-    Value = false,
-    Callback = function(Value)
-        if Value then
-          shop.Enabled = true
-        else
-          shop.Enabled = false
-        end
-    end
-}, "Toggle")
 
 Tabs.Remotestore:Section({ 
     Title = "购买栏",
     TextXAlignment = "Left",
     TextSize = 17,
 })
-
+]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -1592,93 +1602,16 @@ end
 updateDisplay(para)
 
 
---[[
-local function functionSetTitle(name, Button)
-     Button:SetTitle(name)
-end
-
-local AllCharacterModels = Tabs.switchroles:Section({
-    Title = "展示模型",
-    Box = true,
-})
-
-local cloneTable = {}
-
-if game:GetService("ReplicatedStorage"):FindFirstChild("PlayableCharacter") then
-    local PlayableCharacter = game:GetService("ReplicatedStorage").PlayableCharacter
-    for _, original in pairs(PlayableCharacter:GetChildren()) do
-        task.wait()
-        if original:IsA("Model") then
-            local btn = AllCharacterModels:Button({
-                Title = original.Name,
-                Callback = function()
-                    local ex = cloneTable[original]
-                    if ex and ex.Parent then
-                        ex:Destroy()
-                        cloneTable[original] = nil
-                    else
-                        local c = original:Clone()
-                        c.Name = original.Name .. "（克隆体）"
-                        c.Parent = workspace:WaitForChild("Living")
-                        c:PivotTo(game.Players.LocalPlayer.Character:GetPivot())
-                        cloneTable[original] = c
-                    end
-                end
-            })
-        end
-    end
-end
-
-if game:GetService("ReplicatedStorage").SkinFolders then
-    local PlayableCharacterskin = game:GetService("ReplicatedStorage").SkinFolders
-    for _, original in pairs(PlayableCharacterskin:GetChildren()) do
-        task.wait()
-        if original:IsA("Model") then
-            local btn = AllCharacterModels:Button({
-                Title = original.Name,
-                Callback = function()
-                    local ex = cloneTable[original]
-                    if ex and ex.Parent then
-                        ex:Destroy()
-                        cloneTable[original] = nil
-                    else
-                        local c = original:Clone()
-                        c.Name = original.Name .. "（克隆体）"
-                        c.Parent = workspace:WaitForChild("Living")
-                        c:PivotTo(game.Players.LocalPlayer.Character:GetPivot())
-                        cloneTable[original] = c
-                    end
-                end
-            })
-        end
-    end
-end
-]]
-
-
 Tabs.switchroles:Section({ 
     Title = "常用角色",
     TextXAlignment = "Left",
     TextSize = 13,
 })
 
-local function Commonroles(Role, skin, name)
- Tabs.switchroles:Button({
-    Title = name,
-    Desc = nil,
-    Locked = false,
-    Callback = function()
-       local args = {Role, skin}
-       game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
-       WindUI:Notify({Title = "切换提示", Content = "成功切换:" .. name, Duration = 3})
-    end
- })
-end
-
 local Commonroles_Buttons = {
     {name = "神话反派", Desc = nil, Role = "Brown Camera man", skin = 1},
     {name = "女三体", Desc = nil, Role = "Tri Soldier Athena (Girl)", skin = 0},
-    {name = "黑音响", Desc = nil, Role = "Dark Speakerman", skin = nil},
+    {name = "黑音响", Desc = nil, Role = "Dark Speakerman", skin = 0},
     {name = "首席时钟", Desc = nil, Role = "Clock Man", skin = 0},
     {name = "迷你utc", Desc = nil, Role = "Jetpacked Double plunger", skin = 4},
     {name = "工程师", Desc = nil, Role = "Engineer Camera Man", skin = 0},
@@ -1687,8 +1620,24 @@ local Commonroles_Buttons = {
     {name = "大时钟", Desc = nil, Role = "Large Clock Man", skin = 0},
 }
 
+local Characterz = Tabs.switchroles:HStack()
+local LeftVStackz = Characterz:VStack()
+local RightVStackz = Characterz:VStack()
+local indexz = 0
+
 for _, v in ipairs(Commonroles_Buttons) do
-    Commonroles(v.Role, v.skin, v.name)
+    indexz = indexz + 1
+    local targetStack = (indexz % 2 == 1) and LeftVStackz or RightVStackz
+    targetStack:Button({
+        Title = v.name,
+        Desc = nil,
+        Locked = false,
+        Callback = function()
+            local args = {v.Role, v.skin}
+            game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
+            WindUI:Notify({Title = "切换提示", Content = "成功切换:" .. v.name, Duration = 3})
+        end
+    })
 end
 
 local Hasallrole = Tabs.switchroles:Section({ 
@@ -1702,7 +1651,6 @@ getfenv().ChangeCharacterskinvalue = 0
 Hasallrole:Input({
     Title = "皮肤值",
     Desc = "角色皮肤按顺序输入数字",
-    Value = "",
     Type = "Input", 
     Placeholder = "请输入数字",
     Callback = function(input) 
@@ -1710,20 +1658,28 @@ Hasallrole:Input({
     end
 })
 
+local Character = Hasallrole:HStack()
+local LeftVStack = Character:VStack()
+local RightVStack = Character:VStack()
+
 if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
     local UnlockData = game:GetService("Players").LocalPlayer.UnlockData
+    local index = 0
     for _, stringValue in pairs(UnlockData:GetChildren()) do
-        Hasallrole:Button({
+      if stringValue.Name ~= Commonroles_Buttons.Role then
+        index = index + 1
+        local targetStack = (index % 2 == 1) and LeftVStack or RightVStack
+        targetStack:Button({
             Title = stringValue.Name,
             Desc = nil,
             Callback = function()
                 local args = {stringValue.Name, getfenv().ChangeCharacterskinvalue}
                 game:GetService("ReplicatedStorage"):WaitForChild("ForChangeCharacter"):FireServer(unpack(args))
                 WindUI:Notify({Title = "切换提示", Content = "成功切换:" .. stringValue.Name, Duration = 3})
-        end})
+            end
+        })
+      end
     end
-else
-Tabs.switchroles:Button({Title = "错误", Desc = "你角色还没加载完", Callback = function() end})
 end
 
 
