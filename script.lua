@@ -1497,41 +1497,37 @@ end
 -- 立即更新
 updateDisplay(paragraph)
 
-
 --远程商店
---[[
+
 Tabs.Remotestore:Button({
-    Title = "返回大厅",
-    Desc = nil,
-    Callback = function() 
-        local plr = game.Players.LocalPlayer
-        local char = plr.Character
-        local hum = char:FindFirstChildWhichIsA("Humanoid")
-        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+	Title = "传送至商店",
+    Callback = function()
+        if workspace.CanUseShop.Value then
+        local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local a = workspace.HelicopterShop:GetPivot()
+        root:PivotTo(a)
+        end
     end
 })
 
-Tabs.Remotestore:Section({ 
+
+Tabs.Remotestore:Section({
     Title = "购买栏",
     TextXAlignment = "Left",
     TextSize = 17,
 })
-]]
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local ForChangeCharacter = ReplicatedStorage:WaitForChild("ForChangeCharacter")
-local ShopSystem = ReplicatedStorage:WaitForChild("ShopSystem")
-
-local function buyItem(itemName, CharacterType)
-    local PlayerValues = LocalPlayer:WaitForChild("PlayerValues")
+function buyItem(itemName, CharacterType)
+  if workspace.CanUseShop.Value then
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local PlayerValues = game:GetService("Players").LocalPlayer:WaitForChild("PlayerValues")
     local CharacterValue = PlayerValues:WaitForChild("Character")
     local initialCharacterValue = CharacterValue.Value
 
-    ForChangeCharacter:FireServer(CharacterType, 0)
-    ShopSystem:FireServer("Buy", itemName)
-    ForChangeCharacter:FireServer(initialCharacterValue, 0)
+    ReplicatedStorage:WaitForChild("ForChangeCharacter"):FireServer(CharacterType, 1)
+    ReplicatedStorage:WaitForChild("ShopSystem"):FireServer("Buy", itemName)
+    ReplicatedStorage:WaitForChild("ForChangeCharacter"):FireServer(initialCharacterValue, 0)
+  end
 end
 
 local itemButtons = {
@@ -1567,7 +1563,9 @@ Tabs.Remotestore:Section({
 
 local function AmmoShopSystem(times, weapon)
     for _ = 1, times do
+     if workspace.CanUseShop.Value then
         ShopSystem:FireServer("Ammo", LocalPlayer.Character:WaitForChild(weapon))
+     end
     end
 end
 
