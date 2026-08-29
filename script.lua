@@ -971,6 +971,51 @@ Tabs.genericscript:Toggle({
     end
 })
 
+local Lighting = game:GetService("Lighting")
+local savedAtmosphere = nil -- 保存原始 Atmosphere 数据
+
+Tabs.genericscript:Toggle({
+    Title = "去除迷雾",
+    Value = false,
+    Locked = false,
+    Callback = function(Value)
+        if Value then
+            -- 开启：保存并删除 Atmosphere
+            local Atmosphere = Lighting:FindFirstChild("Atmosphere")
+            if Atmosphere then
+                -- 保存原始属性
+                savedAtmosphere = {
+                    Density = Atmosphere.Density,
+                    Offset = Atmosphere.Offset,
+                    Color = Atmosphere.Color,
+                    Decay = Atmosphere.Decay,
+                    Glare = Atmosphere.Glare,
+                    Haze = Atmosphere.Haze
+                }
+                Atmosphere:Destroy()
+            end
+        else
+            -- 关闭：恢复 Atmosphere
+            if savedAtmosphere then
+                local newAtmosphere = Instance.new("Atmosphere")
+                newAtmosphere.Name = "Atmosphere"
+                newAtmosphere.Parent = Lighting
+                
+                -- 恢复原始属性
+                newAtmosphere.Density = savedAtmosphere.Density
+                newAtmosphere.Offset = savedAtmosphere.Offset
+                newAtmosphere.Color = savedAtmosphere.Color
+                newAtmosphere.Decay = savedAtmosphere.Decay
+                newAtmosphere.Glare = savedAtmosphere.Glare
+                newAtmosphere.Haze = savedAtmosphere.Haze
+                
+            else
+                print("⚠️ ")
+            end
+        end
+    end
+})
+
 --公告和更新
 
 Tabs.Announcement_Updates:Paragraph({
@@ -1421,14 +1466,6 @@ for _, group in ipairs(espGroups) do
         end
     })
 end
-
-Tabs.maincontent:Button({
-	Title = "去除迷雾",
-    Callback = function()
-           game:GetService("Lighting").Atmosphere:Destroy()
-    end
-})
-
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SkinFolders = ReplicatedStorage.SkinFolders
