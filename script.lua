@@ -972,7 +972,8 @@ Tabs.genericscript:Toggle({
 })
 
 local Lighting = game:GetService("Lighting")
-local savedAtmosphere = nil -- 保存原始 Atmosphere 数据
+local savedAtmosphere = nil          -- 存储最后一次保存的属性表
+local connection = nil               -- 事件连接句柄
 
 Tabs.genericscript:Toggle({
     Title = "去除迷雾",
@@ -980,41 +981,53 @@ Tabs.genericscript:Toggle({
     Locked = false,
     Callback = function(Value)
         if Value then
-            -- 开启：保存并删除 Atmosphere
-            local Atmosphere = Lighting:FindFirstChild("Atmosphere")
-            if Atmosphere then
-                -- 保存原始属性
-                savedAtmosphere = {
-                    Density = Atmosphere.Density,
-                    Offset = Atmosphere.Offset,
-                    Color = Atmosphere.Color,
-                    Decay = Atmosphere.Decay,
-                    Glare = Atmosphere.Glare,
-                    Haze = Atmosphere.Haze
-                }
-                Atmosphere:Destroy()
+            local existing = Lighting:FindFirstChild("Atmosphere")
+            if existing then
+                saveAndDestroy(existing)
             end
+
+            connection = Lighting.ChildAdded:Connect(function(child)
+                if child:IsA("Atmosphere") then
+                    saveAndDestroy(child)
+                end)
+            end)
+
+            local function saveAndDestroy(atmo)
+                local newData = {
+                    Density = atmo.Density,
+                    Offset = atmo.Offset,
+                    Color = atmo.Color,
+                    Decay = atmo.Decay,
+                    Glare = atmo.Glare,
+                    Haze = atmo.Haze
+                }
+                savedAtmosphere = newData
+                atmo:Destroy()
+            end
+
         else
-            -- 关闭：恢复 Atmosphere
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
+
             if savedAtmosphere then
-                local newAtmosphere = Instance.new("Atmosphere")
-                newAtmosphere.Name = "Atmosphere"
-                newAtmosphere.Parent = Lighting
-                
-                -- 恢复原始属性
-                newAtmosphere.Density = savedAtmosphere.Density
-                newAtmosphere.Offset = savedAtmosphere.Offset
-                newAtmosphere.Color = savedAtmosphere.Color
-                newAtmosphere.Decay = savedAtmosphere.Decay
-                newAtmosphere.Glare = savedAtmosphere.Glare
-                newAtmosphere.Haze = savedAtmosphere.Haze
-                
+                local newAtmo = Instance.new("Atmosphere")
+                newAtmo.Name = "Atmosphere"
+                newAtmo.Parent = Lighting
+                newAtmo.Density = savedAtmosphere.Density
+                newAtmo.Offset = savedAtmosphere.Offset
+                newAtmo.Color = savedAtmosphere.Color
+                newAtmo.Decay = savedAtmosphere.Decay
+                newAtmo.Glare = savedAtmosphere.Glare
+                newAtmo.Haze = savedAtmosphere.Haze
             else
-                print("⚠️ ")
+                print("⚠️ 没有保存的Atmosphere数据，无法恢复")
             end
         end
     end
 })
+
 
 --公告和更新
 
