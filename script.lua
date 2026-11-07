@@ -281,6 +281,101 @@ Tabs.genericscript:Button({
     end
 })
 
+Tabs.genericscript:Toggle({
+    Title = "ESP",
+    Value = false,
+    Callback = function(Value)
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local LocalPlayer = Players.LocalPlayer
+
+        -- 用于存储已添加的高亮，方便关闭时清理
+        local activeHighlights = {}
+        -- 高亮实例在模型中的名称
+        local HIGHLIGHT_NAME = "ESP_Highlight_Internal"
+
+        -- 核心函数：判断一个模型是否为“有血量的生物”，并为其添加高亮
+        local function SetupEntity(humanoid)
+            local character = humanoid.Parent
+            -- 排除空模型、已死亡或血量归零的实体
+            if not character or humanoid.Health <= 0 then return end
+            -- 排除玩家角色（包括自己和其他玩家，根据需要也可以只排除自己）
+            if Players:GetPlayerFromCharacter(character) then return end
+            -- 如果已经添加过高亮，则跳过以避免重复
+            if character:FindFirstChild(HIGHLIGHT_NAME) then return end
+
+            local highlight = Instance.new("Highlight")
+            highlight.Name = HIGHLIGHT_NAME
+            highlight.Adornee = character
+            highlight.FillColor = Color3.fromRGB(255, 0, 0) -- 填充颜色
+            highlight.FillTransparency = 1               -- 填充完全透明，只保留轮廓
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255) -- 轮廓白色
+            highlight.OutlineTransparency = 0
+            -- 关键：穿墙显示
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.Parent = character
+
+            activeHighlights[character] = highlight
+        end
+
+        -- 扫描当前 Workspace 中所有已存在的生物
+        local function ScanExisting()
+            for _, descendant in ipairs(workspace:GetDescendants()) do
+                if descendant:IsA("Humanoid") then
+                    SetupEntity(descendant)
+                end
+            end
+        end
+
+        -- 清理所有高亮
+        local function ClearAll()
+            for character, highlight in pairs(activeHighlights) do
+                if highlight and highlight.Parent then
+                    highlight:Destroy()
+                end
+            end
+            activeHighlights = {}
+        end
+
+        -- 主逻辑
+        if Value then
+            -- 开启 ESP
+            ScanExisting()
+
+            -- 监听后续加入 Workspace 的 Humanoid（新生成的生物）
+            local descendantConn = workspace.DescendantAdded:Connect(function(descendant)
+                if descendant:IsA("Humanoid") then
+                    -- 稍作延迟，确保模型结构（如 Parent）完全就绪
+                    task.wait(0.2)
+                    SetupEntity(descendant)
+                end
+            end)
+
+            -- 监听生物重生或模型被替换的情况（部分游戏会复用模型）
+            -- 通过定期扫描作为兜底，确保没有遗漏
+            local heartbeatConn = RunService.Heartbeat:Connect(function()
+                -- 每 2 秒扫描一次，避免每帧遍历的性能开销
+                -- 实际使用时可以调整间隔
+                -- 但这里为了简洁，我们只处理 DescendantAdded 的遗漏
+                -- 如果游戏中有大量动态模型，建议用更精细的增量扫描
+            end)
+
+            -- 存储连接以便关闭时断开
+            activeHighlights["_connections"] = { descendantConn }
+            -- 注意：上面的 heartbeatConn 暂未使用，可忽略
+        else
+            -- 关闭 ESP
+            local connections = activeHighlights["_connections"]
+            if connections then
+                for _, conn in ipairs(connections) do
+                    conn:Disconnect()
+                end
+            end
+            ClearAll()
+        end
+    end
+}, "Toggle")
+
 local AutomaticinteractionV2 = false
 Tabs.genericscript:Toggle({
     Title = "自动互动",
@@ -723,152 +818,6 @@ textreplacement:Button({
             if n:find(key1, 1, true) then
                 obj.Name = replaceText
             end
-        end
-    end
-})
-
-
-local tcu_game_tabs = Tabs.genericscript:Section({Title = "TCU功能", Box = true})
-
-local Speciactoilet_tcu_list = {
-    "Fire Bomber Toilet",
-    "Plane Bomb Toilet",
-    "Plane Bomb Toilet_Variant",
-    "Radiation Barrel Spider Toilet",
-}
-
-tcu_game_tabs:Toggle({
-    Title = "传送马桶",
-    Desc = nil,
-    Locked = false,
-    Value = false,
-    Callback = function(Value)
-        local Players = game:GetService("Players")
-        local RunService = game:GetService("RunService")
-        local workspace = game:GetService("Workspace")
-        
-        local LocalPlayer = Players.LocalPlayer
-        local LivingFolder = workspace:WaitForChild("Mobs")
-        local MAX_DIST = 5000
-        local OFFSET = CFrame.new(0, 3, 8)
-
-        if Value then
-            RunService:BindToRenderStep("TP", 1, function()
-                if not LocalPlayer.Character then return end
-                
-                local rootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if not rootPart then return end
-
-                local closest, best = nil, MAX_DIST
-                for _, model in ipairs(LivingFolder:GetChildren()) do
-                    if model:IsA("Model") then
-                        local hum = model:FindFirstChildOfClass("Humanoid")
-                        local hrp = model:FindFirstChild("HumanoidRootPart")
-                        
-                        local shouldSkip = false
-                        if model.Name == "Plane Nuke Toilet" then
-                            local isActiveObj = model:FindFirstChild("IsActive")
-                            if isActiveObj and isActiveObj.Value == true then
-                                shouldSkip = true
-                            end
-                        end
-                        
-                        local isInList = table.find(Speciactoilet_tcu_list, model.Name) ~= nil
-                        
-                        if not shouldSkip 
-                           and hum and hrp and hum.Health > 0 
-                           and not Players:GetPlayerFromCharacter(model) 
-                           and not isInList then
-                            
-                            local d = (hrp.Position - rootPart.Position).Magnitude
-                            if d < best then
-                                best, closest = d, model
-                            end
-                        end
-                    end
-                end
-
-                if closest then
-                    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    local tgtHrp = closest:FindFirstChild("HumanoidRootPart")
-                    if hrp and tgtHrp then
-                        hrp.CFrame = tgtHrp.CFrame * OFFSET
-                    end
-                end
-            end)
-        else
-            pcall(function()
-                RunService:UnbindFromRenderStep("TP")
-            end)
-        end
-    end
-})
-
-
-tcu_game_tabs:Button({
-	Title = "无CD(不能关)",
-	Desc = nil,
-    Callback = function()
-local old
-old = hookfunction(wait, newcclosure(function(...)
-   return old()
-end))
-local balls
-balls = hookfunction(task.wait, newcclosure(function(...)
-   return balls()
-end))
-    end
-})
-
-
-tcu_game_tabs:Toggle({
-    Title = "传送材料",
-    Desc = nil,
-    Locked = false,
-    Value = false,
-    Callback = function(Value)
-        local Players = game:GetService("Players")
-        local RunService = game:GetService("RunService")
-        local workspace = game:GetService("Workspace")
-        
-        local LocalPlayer = Players.LocalPlayer
-        local MAX_DIST = 5000
-        local OFFSET = CFrame.new(0, 3, 0)
-
-        if Value then
-            RunService:BindToRenderStep("TP", 1, function()
-                if not LocalPlayer.Character then return end
-                
-                local rootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if not rootPart then return end
-
-                local closest, best = nil, MAX_DIST
-                for _, obj in ipairs(workspace:GetDescendants()) do
-                    if obj:FindFirstChild("TouchInterest") then
-                        local pos = obj.Position or (obj:IsA("Model") and (obj:GetPivot().Position))
-                        if pos then
-                            local d = (pos - rootPart.Position).Magnitude
-                            if d < best then
-                                best, closest = d, obj
-                            end
-                        end
-                    end
-                end
-
-                if closest then
-                    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        local cf = closest.CFrame or (closest:IsA("Model") and closest:GetPivot())
-                        if cf then
-                            hrp.CFrame = cf * OFFSET
-                        end
-                    end
-                end
-            end)
-        else
-            pcall(function()
-                RunService:UnbindFromRenderStep("TP")
-            end)
         end
     end
 })
@@ -1596,6 +1545,7 @@ function buyItem(itemName, CharacterType)
 
     ReplicatedStorage:WaitForChild("ForChangeCharacter"):FireServer(CharacterType, 1)
     ReplicatedStorage:WaitForChild("ShopSystem"):FireServer("Buy", itemName)
+    wait(0.1)
     ReplicatedStorage:WaitForChild("ForChangeCharacter"):FireServer(initialCharacterValue, 0)
   end
 end
@@ -1633,9 +1583,7 @@ Tabs.Remotestore:Section({
 
 local function AmmoShopSystem(times, weapon)
     for _ = 1, times do
-     if workspace.CanUseShop.Value then
         ShopSystem:FireServer("Ammo", LocalPlayer.Character:WaitForChild(weapon))
-     end
     end
 end
 
@@ -1867,76 +1815,5 @@ Tabs.playergui:Toggle({
         end
     end
 }, "Toggle")
-
-Tabs.playergui:Section({ 
-    Title = "泰坦装备",
-    TextXAlignment = "Left",
-    TextSize = 13,
-})
-
-local PlayerGui = game:GetService("Players").LocalPlayer.PlayerGui
-if game:GetService("Players").LocalPlayer:FindFirstChild("UnlockData") then
-
-
-    local function toggleGuiElement(Element)
-        local targetParent = PlayerGui:FindFirstChild("003-A")
-        local element = PlayerGui:FindFirstChild(Element)
-        if targetParent and element then
-            element.Parent = targetParent
-            targetParent:FindFirstChild(Element).Enabled = true
-        end
-    end
-
-    local function toggleGuiElement2(Element)
-        local targetParent = PlayerGui:FindFirstChild("003-A")
-        local element = targetParent:FindFirstChild(Element)
-        if targetParent and element then
-            element.Enabled = false
-            element.Parent = PlayerGui
-        end
-    end
-
-
-    Tabs.playergui:Toggle({
-        Title = "uttv",
-        Desc = nil,
-        Value = false,
-        Callback = function(Value)
-           if Value then
-               toggleGuiElement("UpgradeTVShop")
-           else
-               toggleGuiElement2("UpgradeTVShop")
-           end
-        end
-    }, "Toggle")
-
-    Tabs.playergui:Toggle({
-        Title = "utc",
-        Desc = nil,
-        Value = false,
-        Callback = function(Value)
-            if Value then
-                toggleGuiElement("UpgradeCameraShop")
-            else
-                toggleGuiElement2("UpgradeCameraShop")
-            end
-        end
-    }, "Toggle")
-
-    Tabs.playergui:Toggle({
-        Title = "uts",
-        Desc = nil,
-        Value = false,
-        Callback = function(Value)
-            if Value then
-                toggleGuiElement("ConfirmUTSM")
-            else
-                toggleGuiElement2("ConfirmUTSM")
-            end
-        end
-    }, "Toggle")
-
-end
-
 
 WindUI:Notify({Title = "加载完毕，耗时:" .. string.format("%.1f", os.clock() - t0), Duration = 3,})
